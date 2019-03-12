@@ -2620,14 +2620,6 @@ public DisableFF2()
 			MusicTimer[client]=INVALID_HANDLE;
 		}
 
-		/*if(ClientCookie[client] == TOGGLE_TEMP)
-		{
-			SetClientCookie(client, BossCookie, "-1");
-		}
-		if(ClientCookie2[client] == TOGGLE_TEMP)
-		{
-			SetClientCookie(client, CompanionCookie, "1");
-		}*/
 		bossHasReloadAbility[client]=false;
 		bossHasRightMouseAbility[client]=false;
 	}
@@ -2844,17 +2836,17 @@ EnableSubPlugins(bool force=false)
 	}
 }
 
-DisableSubPlugins(bool:force=false)
+DisableSubPlugins(bool force=false)
 {
 	if(!areSubPluginsEnabled && !force)
 	{
 		return;
 	}
 
-	decl String:path[PLATFORM_MAX_PATH], String:filename[PLATFORM_MAX_PATH];
+	char path[PLATFORM_MAX_PATH], String:filename[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "plugins/freaks");
-	decl FileType:filetype;
-	new Handle:directory=OpenDirectory(path);
+	FileType filetype;
+	Handle directory=OpenDirectory(path);
 	while(ReadDirEntry(directory, filename, sizeof(filename), filetype))
 	{
 		if(filetype==FileType_File && StrContains(filename, ".ff2", false)!=-1)
@@ -2867,10 +2859,10 @@ DisableSubPlugins(bool:force=false)
 	DebugMsg(0, "Unloaded sub-plugins");
 }
 
-public LoadCharacter(const String:character[])
+public LoadCharacter(const char character[])
 {
-	new String:extensions[][]={".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy"};
-	decl String:config[PLATFORM_MAX_PATH];
+	char extensions[][]={".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy"};
+	char config[PLATFORM_MAX_PATH];
 
 	//BuildPath(Path_SM, config, sizeof(config), "configs/freak_fortress_2/%s.cfg", character);
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s.cfg", ConfigPath, character);
@@ -2882,14 +2874,14 @@ public LoadCharacter(const String:character[])
 	BossKV[Specials]=CreateKeyValues("character");
 	FileToKeyValues(BossKV[Specials], config);
 
-	new version=KvGetNum(BossKV[Specials], "version", 1);
+	int version=KvGetNum(BossKV[Specials], "version", 1);
 	if(version!=StringToInt(MAJOR_REVISION) && version!=99) // 99 for bosses made ONLY for this fork
 	{
 		LogError("[FF2 Bosses] Character %s is only compatible with FF2 v%i!", character, version);
 		return;
 	}
 
-	for(new i=1; ; i++)
+	for(int i=1; ; i++)
 	{
 		Format(config, 10, "ability%i", i);
 		if(KvJumpToKey(BossKV[Specials], config))
@@ -2910,7 +2902,7 @@ public LoadCharacter(const String:character[])
 	}
 	KvRewind(BossKV[Specials]);
 
-	decl String:key[PLATFORM_MAX_PATH], String:section[64];
+	char key[PLATFORM_MAX_PATH], String:section[64];
 	KvSetString(BossKV[Specials], "filename", character);
 	KvGetString(BossKV[Specials], "name", config, sizeof(config));
 	bBlockVoice[Specials]=bool:KvGetNum(BossKV[Specials], "sound_block_vo", 0);
@@ -2923,7 +2915,7 @@ public LoadCharacter(const String:character[])
 		KvGetSectionName(BossKV[Specials], section, sizeof(section));
 		if(!strcmp(section, "download"))
 		{
-			for(new i=1; ; i++)
+			for(int i=1; ; i++)
 			{
 				IntToString(i, key, sizeof(key));
 				KvGetString(BossKV[Specials], key, config, sizeof(config));
@@ -2944,7 +2936,7 @@ public LoadCharacter(const String:character[])
 		}
 		else if(!strcmp(section, "mod_download"))
 		{
-			for(new i=1; ; i++)
+			for(int i=1; ; i++)
 			{
 				IntToString(i, key, sizeof(key));
 				KvGetString(BossKV[Specials], key, config, sizeof(config));
@@ -2953,7 +2945,7 @@ public LoadCharacter(const String:character[])
 					break;
 				}
 
-				for(new extension; extension<sizeof(extensions); extension++)
+				for(int extension; extension<sizeof(extensions); extension++)
 				{
 					Format(key, PLATFORM_MAX_PATH, "%s%s", config, extensions[extension]);
 					if(FileExists(key, true))
@@ -2972,7 +2964,7 @@ public LoadCharacter(const String:character[])
 		}
 		else if(!strcmp(section, "mat_download"))
 		{
-			for(new i=1; ; i++)
+			for(int i=1; ; i++)
 			{
 				IntToString(i, key, sizeof(key));
 				KvGetString(BossKV[Specials], key, config, sizeof(config));
@@ -3000,35 +2992,13 @@ public LoadCharacter(const String:character[])
 				}
 			}
 		}
-		/*else if((!StrContains(section, "sound_") || !strcmp(section, "catch_phrase")) && bool:KvGetNum(BossKV[Specials], "newdownload", GetConVarInt(cvarNewDownload)))
-		{
-			for(new i=1; ; i++)
-			{
-				IntToString(i, key, sizeof(key));
-				KvGetString(BossKV[Specials], key, config, sizeof(config));
-				if(!config[0])
-				{
-					break;
-				}
-				Format(key, sizeof(key), "sound/%s", config);
-				if(FileExists(key, true) && (!StrContains(key, "sound/freak_fortress_2") || !StrContains(key, "sound/saxton_hale")))
-				{
-					AddFileToDownloadsTable(key);
-				}
-				else if(!StrContains(key, "sound/freak_fortress_2") || !StrContains(key, "sound/saxton_hale"))
-				{
-					LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, key);
-				}
-				// No real way to do this properly... in my head...
-			}
-		}*/
 	}
 	Specials++;
 }
 
-public PrecacheCharacter(characterIndex)
+public PrecacheCharacter(int characterIndex)
 {
-	decl String:file[PLATFORM_MAX_PATH], String:filePath[PLATFORM_MAX_PATH], String:key[8], String:section[16], String:bossName[64];
+	char file[PLATFORM_MAX_PATH], filePath[PLATFORM_MAX_PATH], key[8], section[16], bossName[64];
 	KvRewind(BossKV[characterIndex]);
 	KvGetString(BossKV[characterIndex], "filename", bossName, sizeof(bossName));
 	KvGotoFirstSubKey(BossKV[characterIndex]);
@@ -3037,7 +3007,7 @@ public PrecacheCharacter(characterIndex)
 		KvGetSectionName(BossKV[characterIndex], section, sizeof(section));
 		if(StrEqual(section, "sound_bgm"))
 		{
-			for(new i=1; ; i++)
+			for(int i=1; ; i++)
 			{
 				Format(key, sizeof(key), "path%d", i);
 				KvGetString(BossKV[characterIndex], key, file, sizeof(file));
@@ -3059,7 +3029,7 @@ public PrecacheCharacter(characterIndex)
 		}
 		else if(StrEqual(section, "mod_precache") || !StrContains(section, "sound_") || StrEqual(section, "catch_phrase"))
 		{
-			for(new i=1; ; i++)
+			for(int i=1; ; i++)
 			{
 				IntToString(i, key, sizeof(key));
 				KvGetString(BossKV[characterIndex], key, file, sizeof(file));
@@ -3096,7 +3066,7 @@ public PrecacheCharacter(characterIndex)
 	}
 }
 
-public CvarChange(Handle:convar, const String:oldValue[], const String:newValue[])
+public CvarChange(Handle convar, const char oldValue[], const char newValue[])
 {
 	if(convar==cvarAnnounce)
 	{
@@ -3126,10 +3096,6 @@ public CvarChange(Handle:convar, const String:oldValue[], const String:newValue[
 	{
 		shieldCrits=StringToInt(newValue);
 	}
-	//else if(convar==cvarCaberDetonations)
-	//{
-		//allowedDetonations=StringToInt(newValue);
-	//}
 	else if(convar==cvarGoombaDamage)
 	{
 		GoombaDamage=StringToFloat(newValue);
@@ -3204,13 +3170,13 @@ public CvarChange(Handle:convar, const String:oldValue[], const String:newValue[
 }
 /* TODO: Re-enable in 2.0.0
 #if defined _smac_included
-public Action:SMAC_OnCheatDetected(client, const String:module[], DetectionType:type, Handle:info)
+public Action:SMAC_OnCheatDetected(int client, const char module[], DetectionType type, Handle info)
 {
 	Debug("SMAC: Cheat detected!");
 	if(type==Detection_CvarViolation)
 	{
 		Debug("SMAC: Cheat was a cvar violation!");
-		decl String:cvar[PLATFORM_MAX_PATH];
+		char cvar[PLATFORM_MAX_PATH];
 		KvGetString(info, "cvar", cvar, sizeof(cvar));
 		Debug("Cvar was %s", cvar);
 		if((StrEqual(cvar, "sv_cheats") || StrEqual(cvar, "host_timescale")) && !(FF2flags[Boss[client]] & FF2FLAG_CHANGECVAR))
@@ -3223,9 +3189,9 @@ public Action:SMAC_OnCheatDetected(client, const String:module[], DetectionType:
 }
 #endif
 */
-public Action:Timer_Announce(Handle:timer)
+public Action Timer_Announce(Handle timer)
 {
-	static announcecount=-1;
+	static int announcecount=-1;
 	announcecount++;
 	if(Announce>1.0 && Enabled2)
 	{
@@ -3291,9 +3257,9 @@ public Action:Timer_Announce(Handle:timer)
 	return Plugin_Continue;
 }
 
-stock bool:IsFF2Map()
+stock bool IsFF2Map()
 {
-	decl String:config[PLATFORM_MAX_PATH];
+	char config[PLATFORM_MAX_PATH];
 	GetCurrentMap(currentmap, sizeof(currentmap));
 	if(FileExists("bNextMapToFF2"))
 	{
@@ -3316,7 +3282,7 @@ stock bool:IsFF2Map()
 		return false;
 	}
 
-	new Handle:file=OpenFile(config, "r");
+	Handle file=OpenFile(config, "r");
 	if(file==INVALID_HANDLE)
 	{
 		LogError("[FF2] Error reading maps from %s, disabling plugin.", config);
@@ -3324,7 +3290,7 @@ stock bool:IsFF2Map()
 		return false;
 	}
 
-	new tries;
+	int tries;
 	while(ReadFileLine(file, config, sizeof(config)) && tries<100)
 	{
 		tries++;
@@ -3351,10 +3317,10 @@ stock bool:IsFF2Map()
 	return false;
 }
 
-stock bool:MapHasMusic(bool:forceRecalc=false)  //SAAAAAARGE
+stock bool MapHasMusic(bool forceRecalc=false)  //SAAAAAARGE
 {
-	static bool:hasMusic;
-	static bool:found;
+	static bool hasMusic;
+	static bool found;
 	if(forceRecalc)
 	{
 		found=false;
@@ -3363,8 +3329,8 @@ stock bool:MapHasMusic(bool:forceRecalc=false)  //SAAAAAARGE
 
 	if(!found)
 	{
-		new entity=-1;
-		decl String:name[64];
+		int entity=-1;
+		char name[64];
 		while((entity=FindEntityByClassname2(entity, "info_target"))!=-1)
 		{
 			GetEntPropString(entity, Prop_Data, "m_iName", name, sizeof(name));
@@ -3379,14 +3345,14 @@ stock bool:MapHasMusic(bool:forceRecalc=false)  //SAAAAAARGE
 	return hasMusic;
 }
 
-stock bool:CheckToChangeMapDoors()
+stock bool CheckToChangeMapDoors()
 {
 	if(!Enabled || !Enabled2)
 	{
 		return;
 	}
 
-	decl String:config[PLATFORM_MAX_PATH];
+	char config[PLATFORM_MAX_PATH];
 	checkDoors=false;
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s", DataPath, DoorCFG);
 	if(!FileExists(config))
@@ -3404,7 +3370,7 @@ stock bool:CheckToChangeMapDoors()
 		return;
 	}
 
-	new Handle:file=OpenFile(config, "r");
+	Handle file=OpenFile(config, "r");
 	if(file==INVALID_HANDLE)
 	{
 		if(!strncmp(currentmap, "vsh_lolcano_pb1", 15, false))
@@ -3502,7 +3468,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 	}
 
 	playing=0;
-	for(new client=1; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		Damage[client]=0;
 		Healing[client]=0;
@@ -3534,9 +3500,9 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 		DisableSubPlugins();
 		SetArenaCapEnableTime(60.0);
 		CreateTimer(71.0, Timer_EnableCap, _, TIMER_FLAG_NO_MAPCHANGE);
-		new bool:toRed;
-		new TFTeam:team;
-		for(new client; client<=MaxClients; client++)
+		bool toRed;
+		TFTeam team;
+		for(int client; client<=MaxClients; client++)
 		{
 			if(IsValidClient(client) && (team=TFTeam:GetClientTeam(client))>TFTeam_Spectator)
 			{
@@ -3558,7 +3524,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 		return Plugin_Continue;
 	}
 
-	for(new client; client<=MaxClients; client++)
+	for(int client; client<=MaxClients; client++)
 	{
 		Boss[client]=0;
 		if(IsValidClient(client) && IsPlayerAlive(client) && !(FF2flags[client] & FF2FLAG_HASONGIVED))
@@ -3571,16 +3537,16 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 	EnableSubPlugins();
 	CheckArena();
 
-	new bool:omit[MaxClients+1];
+	bool omit[MaxClients+1];
 	Boss[0]=GetClientWithMostQueuePoints(omit);
 	omit[Boss[0]]=true;
 
-	new bool:teamHasPlayers[TFTeam];
-	for(new client=1; client<=MaxClients; client++)  //Find out if each team has at least one player on it
+	bool teamHasPlayers[TFTeam];
+	for(int client=1; client<=MaxClients; client++)  //Find out if each team has at least one player on it
 	{
 		if(IsValidClient(client))
 		{
-			new TFTeam:team=TFTeam:GetClientTeam(client);
+			TFTeam team=TFTeam:GetClientTeam(client);
 			if(team>TFTeam_Spectator)
 			{
 				teamHasPlayers[team]=true;
@@ -3600,7 +3566,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 			AssignTeam(Boss[0], BossTeam);
 		}
 
-		for(new client=1; client<=MaxClients; client++)
+		for(int client=1; client<=MaxClients; client++)
 		{
 			if(IsValidClient(client) && !IsBoss(client) && GetClientTeam(client)!=OtherTeam)
 			{
@@ -3621,7 +3587,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 	Companions=0;
 	FindCompanion(0, playing, omit);  //Find companions for the boss!
 
-	for(new boss; boss<=MaxClients; boss++)
+	for(int boss; boss<=MaxClients; boss++)
 	{
 		BossInfoTimer[boss][0]=INVALID_HANDLE;
 		BossInfoTimer[boss][1]=INVALID_HANDLE;
@@ -3637,14 +3603,14 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 	CreateTimer(9.1, StartBossTimer, _, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(9.6, MessageTimer, _, TIMER_FLAG_NO_MAPCHANGE);
 
-	for(new entity=MaxClients+1; entity<MAXENTITIES; entity++)
+	for(int entity=MaxClients+1; entity<MAXENTITIES; entity++)
 	{
 		if(!IsValidEntity(entity))
 		{
 			continue;
 		}
 
-		decl String:classname[64];
+		char classname[64];
 		GetEntityClassname(entity, classname, sizeof(classname));
 		if(!strcmp(classname, "func_regenerate"))
 		{
@@ -3656,9 +3622,9 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 		}
 	}
 
-	if (GetConVarBool(cvarToggleBoss))
+	if(GetConVarBool(cvarToggleBoss))
 	{
-		for(new client=1;client<=MaxClients;client++)
+		for(int client=1;client<=MaxClients;client++)
 		{
 			if(!IsValidClient(client))
 			{
@@ -3671,7 +3637,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 		
 		SortCustom2D(ClientQueue, sizeof(ClientQueue), SortQueueDesc);
 		
-		for(new client=1;client<=MaxClients;client++)
+		for(int client=1;client<=MaxClients;client++)
 		{
 			if(!IsValidClient(client))
 			{
@@ -3681,18 +3647,18 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 			ClientID[client] = ClientQueue[client][0];
 			ClientPoint[client] = ClientQueue[client][1];
 			
-			if (ClientCookie[client] == TOGGLE_ON)
+			if(ClientCookie[client] == TOGGLE_ON)
 			{
-				new index = -1;
-				for(new i = 1; i < MAXPLAYERS+1; i++)
+				int index = -1;
+				for(int i = 1; i < MAXPLAYERS+1; i++)
 				{
-					if (ClientID[i] == client)
+					if(ClientID[i] == client)
 					{
 						index = i;
 						break;
 					}
 				}
-				if (index > 0)
+				if(index > 0)
 				{
 					CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Toggle Queue Notification", index, ClientPoint[index]);
 				}
@@ -3701,10 +3667,10 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 					CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Toggle Enabled Notification");
    				}
 			}
-			else if (ClientCookie[client] == TOGGLE_OFF || ClientCookie[client] == TOGGLE_TEMP)
+			else if(ClientCookie[client] == TOGGLE_OFF || ClientCookie[client] == TOGGLE_TEMP)
 			{
 				//SetClientQueuePoints(client, -15);
-				decl String:nick[64];
+				char nick[64];
 				GetClientName(client, nick, sizeof(nick));
 				if(ClientCookie[client] == TOGGLE_OFF)
 				{
@@ -3715,11 +3681,11 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 					CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Toggle Disabled Notification For Map");
 				}
 			}
-			else if (ClientCookie[client] == TOGGLE_UNDEF || !ClientCookie[client])
+			else if(ClientCookie[client] == TOGGLE_UNDEF || !ClientCookie[client])
 			{
-				decl String:nick[64];
+				char nick[64];
 				GetClientName(client, nick, sizeof(nick));
-				new Handle:clientPack = CreateDataPack();
+				Handle clientPack = CreateDataPack();
 				WritePackCell(clientPack, client);
 				CreateTimer(GetConVarFloat(cvarFF2TogglePrefDelay), BossMenuTimer, clientPack);
 			}
@@ -3728,7 +3694,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 
 	if(GetConVarBool(cvarNameChange))
 	{
-		decl String:newName[256], String:bossName[64];
+		char newName[256], bossName[64];
 		SetConVarString(hostName, oldName);
 		KvGetString(BossKV[Special[0]], "name", bossName, sizeof(bossName));
 		Format(newName, sizeof(newName), "%s | %s", oldName, bossName);
