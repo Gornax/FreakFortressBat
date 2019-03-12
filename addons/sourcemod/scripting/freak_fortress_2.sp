@@ -2843,7 +2843,7 @@ DisableSubPlugins(bool force=false)
 		return;
 	}
 
-	char path[PLATFORM_MAX_PATH], String:filename[PLATFORM_MAX_PATH];
+	char path[PLATFORM_MAX_PATH], filename[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "plugins/freaks");
 	FileType filetype;
 	Handle directory=OpenDirectory(path);
@@ -3707,7 +3707,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 	return Plugin_Continue;
 }
 
-public Action:Timer_EnableCap(Handle:timer)
+public Action Timer_EnableCap(Handle timer)
 {
 	if((Enabled || Enabled2) && CheckRoundState()==-1)
 	{
@@ -3715,7 +3715,7 @@ public Action:Timer_EnableCap(Handle:timer)
 		DebugMsg(0, "Enabled Control Point");
 		if(checkDoors)
 		{
-			new ent=-1;
+			int ent=-1;
 			while((ent=FindEntityByClassname2(ent, "func_door"))!=-1)
 			{
 				AcceptEntityInput(ent, "Open");
@@ -3730,7 +3730,7 @@ public Action:Timer_EnableCap(Handle:timer)
 	}
 }
 
-public Action:BossInfoTimer_Begin(Handle:timer, any:boss)
+public Action BossInfoTimer_Begin(Handle timer, any boss)
 {
 	BossInfoTimer[boss][0]=INVALID_HANDLE;
 	BossInfoTimer[boss][1]=CreateTimer(0.2, BossInfoTimer_ShowInfo, boss, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -3738,7 +3738,7 @@ public Action:BossInfoTimer_Begin(Handle:timer, any:boss)
 	return Plugin_Continue;
 }
 
-public Action:BossInfoTimer_ShowInfo(Handle:timer, any:boss)
+public Action BossInfoTimer_ShowInfo(Handle timer, any boss)
 {
 	if(!IsValidClient(Boss[boss]))
 	{
@@ -3772,7 +3772,7 @@ public Action:BossInfoTimer_ShowInfo(Handle:timer, any:boss)
 	return Plugin_Continue;
 }
 
-public Action:Timer_CheckDoors(Handle:timer)
+public Action Timer_CheckDoors(Handle timer)
 {
 	if(!checkDoors)
 	{
@@ -3785,7 +3785,7 @@ public Action:Timer_CheckDoors(Handle:timer)
 		return Plugin_Continue;
 	}
 
-	new entity=-1;
+	int entity=-1;
 	while((entity=FindEntityByClassname2(entity, "func_door"))!=-1)
 	{
 		AcceptEntityInput(entity, "Open");
@@ -3796,7 +3796,7 @@ public Action:Timer_CheckDoors(Handle:timer)
 
 public CheckArena()
 {
-	new Float:PointTotal=float(PointTime+PointDelay*(playing-1));
+	float PointTotal=float(PointTime+PointDelay*(playing-1));
 	if(PointType==0 || PointTotal<0)
 	{
 		SetArenaCapEnableTime(0.0);
