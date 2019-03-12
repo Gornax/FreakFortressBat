@@ -2060,7 +2060,7 @@ public void OnPluginStart()
 	//lifeHUD=CreateHudSynchronizer();
 
 	char oldVersion[64];
-	GetConVarString(cvarVersion, oldVersion, sizeof(oldVersion));
+	cvarVersion.GetString(oldVersion, 64);
 	if(strcmp(oldVersion, PLUGIN_VERSION, false))
 	{
 		PrintToServer("[FF2] Warning: Your config may be outdated. Back up tf/cfg/sourcemod/FreakFortress2.cfg and delete it, and this plugin will generate a new one that you can then modify to your original values.");
@@ -2573,7 +2573,7 @@ public EnableFF2()
 	#if defined _steamtools_included
 	if(steamtools)
 	{
-		decl gameDesc[64];
+		char gameDesc[64];
 		Format(gameDesc, sizeof(gameDesc), "Freak Fortress 2 (%s)", PLUGIN_VERSION);
 		Steam_SetGameDescription(gameDesc);
 	}
@@ -2650,7 +2650,7 @@ public DisableFF2()
 
 public CacheWeapons()
 {
-	decl config[PLATFORM_MAX_PATH];
+	char config[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s", DataPath, WeaponCFG);
 	
 	if(!FileExists(config))
@@ -2756,7 +2756,7 @@ public FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextKey
 
 	if(ChancesString[0])
 	{
-		decl stringChances[MAXSPECIALS*2][8];
+		char stringChances[MAXSPECIALS*2][8];
 
 		int amount=ExplodeString(ChancesString, ";", stringChances, MAXSPECIALS*2, 8);
 		if(amount % 2)
@@ -2818,7 +2818,7 @@ EnableSubPlugins(bool force=false)
 
 	areSubPluginsEnabled=true;
 	DebugMsg(0, "Loading sub-plugins");
-	decl path[PLATFORM_MAX_PATH], filename[PLATFORM_MAX_PATH], filename_old[PLATFORM_MAX_PATH];
+	char path[PLATFORM_MAX_PATH], filename[PLATFORM_MAX_PATH], filename_old[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, path, sizeof(path), "plugins/freaks");
 	FileType filetype;
 	Handle directory=OpenDirectory(path);
