@@ -2859,7 +2859,7 @@ DisableSubPlugins(bool force=false)
 	DebugMsg(0, "Unloaded sub-plugins");
 }
 
-public LoadCharacter(const char character[])
+public LoadCharacter(const char[] character)
 {
 	char extensions[][]={".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy"};
 	char config[PLATFORM_MAX_PATH];
@@ -2902,7 +2902,7 @@ public LoadCharacter(const char character[])
 	}
 	KvRewind(BossKV[Specials]);
 
-	char key[PLATFORM_MAX_PATH], String:section[64];
+	char key[PLATFORM_MAX_PATH], section[64];
 	KvSetString(BossKV[Specials], "filename", character);
 	KvGetString(BossKV[Specials], "name", config, sizeof(config));
 	bBlockVoice[Specials]=bool:KvGetNum(BossKV[Specials], "sound_block_vo", 0);
@@ -3809,7 +3809,7 @@ public CheckArena()
 	}
 }
 
-public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 {
 	RoundCount++;
 	Companions=0;
@@ -3824,23 +3824,18 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 	if(GetConVarInt(cvarBossLog)>0 && GetConVarInt(cvarBossLog)<=playing)
 	{
 		// Variables
-		decl String:bossName[64];
-		char FormatedTime[64];
-		char MapName[64];
-		char Result[64];
-		char PlayerName[64];
-		char Authid[64];
+		char bossName[64], FormatedTime[64], MapName[64], Result[64], PlayerName[64], Authid[64];
 
 		// Set variables
 		int CurrentTime = GetTime();
 		FormatTime(FormatedTime, 100, "%X", CurrentTime);
 		GetCurrentMap(MapName, sizeof(MapName));
 		Format(Result, sizeof(Result), GetEventInt(event, "team")==BossTeam ? "won" : "loss");
-		for(new client; client<=MaxClients; client++)
+		for(int client; client<=MaxClients; client++)
 		{
 			if(IsBoss(client))
 			{
-				new boss=Boss[client];
+				int boss=Boss[client];
 				if(!IsFakeClient(client))
 				{
 					GetClientName(Boss[boss], PlayerName, sizeof(PlayerName));
@@ -3898,8 +3893,8 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 
 	executed=false;
 	executed2=false;
-	new bool:bossWin=false;
-	decl String:sound[PLATFORM_MAX_PATH];
+	bool bossWin=false;
+	char sound[PLATFORM_MAX_PATH];
 	if((GetEventInt(event, "team")==BossTeam))
 	{
 		bossWin=true;
@@ -3947,8 +3942,8 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 	StopMusic();
 	DrawGameTimer=INVALID_HANDLE;
 
-	new bool:isBossAlive;
-	for(new boss; boss<=MaxClients; boss++)
+	bool isBossAlive;
+	for(int boss; boss<=MaxClients; boss++)
 	{
 		if(IsValidClient(Boss[boss]))
 		{
@@ -3959,7 +3954,7 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 				isBossAlive=true;
 			}
 
-			for(new slot=1; slot<8; slot++)
+			for(int slot=1; slot<8; slot++)
 			{
 				BossCharge[boss][slot]=0.0;
 			}
@@ -3973,7 +3968,7 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 			detonations[boss]=0;
 		}
 
-		for(new timer; timer<=1; timer++)
+		for(int timer; timer<=1; timer++)
 		{
 			if(BossInfoTimer[boss][timer]!=INVALID_HANDLE)
 			{
@@ -3983,11 +3978,10 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 
-	new boss;
+	int boss;
 	if(isBossAlive)
 	{
-		new String:text[128];  //Do not decl this
-		decl String:bossName[64], String:lives[8];
+		char text[128], bossName[64], lives[8];
 		for(new target; target<=MaxClients; target++)
 		{
 			if(IsBoss(target))
@@ -4017,9 +4011,9 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 
-	new top[3];
+	int top[3];
 	Damage[0]=0;
-	for(new client=1; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(!IsValidClient(client) || Damage[client]<=0 || IsBoss(client))
 		{
@@ -4048,8 +4042,8 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 		CreateTimer(1.0, Timer_NineThousand, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 
-	decl String:leaders[3][32];
-	for(new i; i<=2; i++)
+	char leaders[3][32];
+	for(int i; i<=2; i++)
 	{
 		if(IsValidClient(top[i]))
 		{
@@ -4065,8 +4059,8 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 	SetHudTextParams(-1.0, 0.3, 10.0, 255, 255, 255, 255);
 	PrintCenterTextAll("");
 
-	new String:text[128];  //Do not decl this
-	for(new client; client<=MaxClients; client++)
+	char text[128];
+	for(int client; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
@@ -4098,7 +4092,7 @@ public Action:OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action:OnPlayerDisconnect(Handle:event, const String:name[], bool:dontBroadcast)
+public Action OnPlayerDisconnect(Handle event, const char[] name, bool dontBroadcast)
 {
 	if(!Enabled)
 	{
@@ -4118,13 +4112,13 @@ public Action:OnPlayerDisconnect(Handle:event, const String:name[], bool:dontBro
 	return Plugin_Continue;
 }
 
-public Action:BossMenuTimer(Handle:timer, any:clientpack)
+public Action BossMenuTimer(Handle timer, any clientpack)
 {
-	decl clientId;
+	int clientId;
 	ResetPack(clientpack);
 	clientId = ReadPackCell(clientpack);
 	CloseHandle(clientpack);
-	if (ClientCookie[clientId] == TOGGLE_UNDEF)
+	if(ClientCookie[clientId] == TOGGLE_UNDEF)
 	{
 		BossMenu(clientId, 0);
 	}
@@ -4132,20 +4126,20 @@ public Action:BossMenuTimer(Handle:timer, any:clientpack)
 }
 
 // Companion Menu
-public Action:CompanionMenu(client, args)
+public Action CompanionMenu(int client, int args)
 {
-	if (IsValidClient(client) && GetConVarBool(cvarDuoBoss))
+	if(IsValidClient(client) && GetConVarBool(cvarDuoBoss))
 	{
 		CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Companion Toggle Menu Title", ClientCookie2[client]);
 
-		decl String:sEnabled[2];
+		char sEnabled[2];
 		GetClientCookie(client, CompanionCookie, sEnabled, sizeof(sEnabled));
 		ClientCookie2[client] = StringToInt(sEnabled);	
 
-		new Handle:menu = CreateMenu(MenuHandlerCompanion);
+		Handle menu = CreateMenu(MenuHandlerCompanion);
 		SetMenuTitle(menu, "%T", "FF2 Companion Toggle Menu Title", client, ClientCookie2[client]);
 
-		new String:menuoption[128];
+		char menuoption[128];
 		Format(menuoption, sizeof(menuoption), "%T", "Enable Companion Selection", client);
 		AddMenuItem(menu, "FF2 Companion Toggle Menu", menuoption);
 		Format(menuoption, sizeof(menuoption), "%T", "Disable Companion Selection", client);
@@ -4161,12 +4155,12 @@ public Action:CompanionMenu(client, args)
 	return Plugin_Handled;
 }
 
-public MenuHandlerCompanion(Handle:menu, MenuAction:action, param1, param2)
+public MenuHandlerCompanion(Handle menu, MenuAction action, int param1, int param2)
 {
 	if(action == MenuAction_Select)
 	{
-		decl String:sEnabled[2];
-		new choice = param2 + 1;
+		char sEnabled[2];
+		int choice = param2 + 1;
 
 		ClientCookie2[param1] = choice;
 		IntToString(choice, sEnabled, sizeof(sEnabled));
@@ -4193,19 +4187,19 @@ public MenuHandlerCompanion(Handle:menu, MenuAction:action, param1, param2)
 }
 
 // Boss menu
-public Action:BossMenu(client, args)
+public Action BossMenu(int client, int args)
 {
-	if (IsValidClient(client) && GetConVarBool(cvarToggleBoss))
+	if(IsValidClient(client) && GetConVarBool(cvarToggleBoss))
 	{
 		CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Toggle Menu Title", ClientCookie[client]);
-		decl String:sEnabled[2];
+		char sEnabled[2];
 		GetClientCookie(client, BossCookie, sEnabled, sizeof(sEnabled));
 		ClientCookie[client] = StringToInt(sEnabled);
 
-		new Handle:menu = CreateMenu(MenuHandlerBoss);
+		Handle menu = CreateMenu(MenuHandlerBoss);
 		SetMenuTitle(menu, "%T", "FF2 Toggle Menu Title", client, ClientCookie[client]);
 
-		new String:menuoption[128];
+		char menuoption[128];
 		Format(menuoption, sizeof(menuoption), "%T", "Enable Queue Points", client);
 		AddMenuItem(menu, "Boss Toggle", menuoption);
 		Format(menuoption, sizeof(menuoption), "%T", "Disable Queue Points", client);
@@ -4225,8 +4219,8 @@ public MenuHandlerBoss(Handle:menu, MenuAction:action, param1, param2)
 {
 	if(action == MenuAction_Select)
 	{
-		decl String:sEnabled[2];
-		new choice = param2 + 1;
+		char sEnabled[2];
+		int choice = param2 + 1;
 
 		ClientCookie[param1] = choice;
 		IntToString(choice, sEnabled, sizeof(sEnabled));
@@ -4252,18 +4246,18 @@ public MenuHandlerBoss(Handle:menu, MenuAction:action, param1, param2)
 	}
 }
 
-public SortQueueDesc(x[], y[], array[][], Handle:data)
+public SortQueueDesc(const x[], const y[], const array[][], Handle data)
 {
-	if (x[1] > y[1])
+	if(x[1] > y[1])
 		return -1;
-	else if (x[1] < y[1])
+	else if(x[1] < y[1])
 		return 1;
 	return 0;
 }
 
-public Action:OnBroadcast(Handle:event, const String:name[], bool:dontBroadcast)
+public Action OnBroadcast(Handle event, const char[] name, bool dontBroadcast)
 {
-	decl String:sound[PLATFORM_MAX_PATH];
+	char sound[PLATFORM_MAX_PATH];
 	GetEventString(event, "sound", sound, sizeof(sound));
 	if(!StrContains(sound, "Game.Your", false) || StrEqual(sound, "Game.Stalemate", false))
 	{
@@ -4272,7 +4266,7 @@ public Action:OnBroadcast(Handle:event, const String:name[], bool:dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action:Timer_NineThousand(Handle:timer)
+public Action Timer_NineThousand(Handle timer)
 {
 	EmitSoundToAll("saxton_hale/9000.wav", _, _, _, _, _, _, _, _, _, false);
 	EmitSoundToAllExcept(SOUNDEXCEPT_VOICE, "saxton_hale/9000.wav", _, SNDCHAN_VOICE, _, _, _, _, _, _, _, false);
@@ -4280,15 +4274,13 @@ public Action:Timer_NineThousand(Handle:timer)
 	return Plugin_Continue;
 }
 
-public Action:Timer_CalcQueuePoints(Handle:timer)
+public Action Timer_CalcQueuePoints(Handle timer)
 {
-	new damage;
-	new damage2;
+	int damage, damage2;
 	botqueuepoints+=5;
-	new add_points[MaxClients+1];
-	new add_points2[MaxClients+1];
+	int add_points[MaxClients+1], add_points2[MaxClients+1];
 	DebugMsg(0, "Queue points set");
-	for(new client=1; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if((ClientCookie[client] == TOGGLE_OFF || ClientCookie[client] == TOGGLE_TEMP) && GetConVarBool(cvarToggleBoss)) // Do not give queue points to those who have ff2 bosses disabled
 			continue;
@@ -4297,10 +4289,10 @@ public Action:Timer_CalcQueuePoints(Handle:timer)
 		{
 			damage=Damage[client];
 			damage2=Damage[client];
-			new Handle:event=CreateEvent("player_escort_score", true);
+			Handle event=CreateEvent("player_escort_score", true);
 			SetEventInt(event, "player", client);
 
-			new points;
+			int points;
 			while(damage-PointsInterval>0)
 			{
 				damage-=PointsInterval;
@@ -4311,7 +4303,6 @@ public Action:Timer_CalcQueuePoints(Handle:timer)
 
 			if(IsBoss(client))
 			{
-				//CPrintToChatAll("%s Index: %d", client, GetBossIndex(client));
 				if(IsFakeClient(client))
 				{
 					botqueuepoints=0;
@@ -4349,7 +4340,7 @@ public Action:Timer_CalcQueuePoints(Handle:timer)
 		}
 	}
 
-	new Action:action;
+	Action action;
 	Call_StartForward(OnAddQueuePoints);
 	Call_PushArrayEx(add_points2, MaxClients+1, SM_PARAM_COPYBACK);
 	Call_Finish(action);
@@ -4361,7 +4352,7 @@ public Action:Timer_CalcQueuePoints(Handle:timer)
 		}
 		case Plugin_Changed:
 		{
-			for(new client=1; client<=MaxClients; client++)
+			for(int client=1; client<=MaxClients; client++)
 			{
 				if(IsValidClient(client))
 				{
@@ -4375,7 +4366,7 @@ public Action:Timer_CalcQueuePoints(Handle:timer)
 		}
 		default:
 		{
-			for(new client=1; client<=MaxClients; client++)
+			for(int client=1; client<=MaxClients; client++)
 			{
 				if(IsValidClient(client))
 				{
@@ -4390,9 +4381,9 @@ public Action:Timer_CalcQueuePoints(Handle:timer)
 	}
 }
 
-public Action:StartResponseTimer(Handle:timer)
+public Action StartResponseTimer(Handle timer)
 {
-	decl String:sound[PLATFORM_MAX_PATH];
+	char sound[PLATFORM_MAX_PATH];
 	if(RandomSound("sound_begin", sound, sizeof(sound)))
 	{
 		EmitSoundToAllExcept(SOUNDEXCEPT_VOICE, sound, _, _, _, _, _, _, _, _, _, false);
@@ -4402,9 +4393,9 @@ public Action:StartResponseTimer(Handle:timer)
 	return Plugin_Continue;
 }
 
-public Action:StartIntroMusicTimer(Handle:timer)
+public Action StartIntroMusicTimer(Handle timer)
 {
-	decl String:sound[PLATFORM_MAX_PATH];
+	char sound[PLATFORM_MAX_PATH];
 	if(RandomSound("sound_intromusic", sound, sizeof(sound)))
 	{
 		EmitSoundToAllExcept(SOUNDEXCEPT_MUSIC, sound, _, _, _, _, _, _, _, _, _, false);
