@@ -120,247 +120,244 @@ float shDmgReduction[MAXPLAYERS+1];
 char dLog[256];
 
 #if defined _steamtools_included
-new bool:steamtools=false;
+bool steamtools=false;
 #endif
 
 #if defined _tf2attributes_included
-new bool:tf2attributes=false;
+bool tf2attributes=false;
 #endif
 
 #if defined _goomba_included
-new bool:goomba=false;
+bool goomba=false;
 #endif
 
-new bool:smac=false;
+bool smac=false;
 
-new bool:isCapping=false;
+bool isCapping=false;
 
-new RPSWinner;
-new currentBossTeam;
-new bool:blueBoss;
-new OtherTeam=2;
-new BossTeam=3;
-new playing;
-new healthcheckused;
-new RedAlivePlayers;
-new BlueAlivePlayers;
-new RoundCount;
-new Companions=0;
-new GhostBoss=0;
-new Float:rageMax[MAXPLAYERS+1];
-new Float:rageMin[MAXPLAYERS+1];
-new rageMode[MAXPLAYERS+1];
-new Special[MAXPLAYERS+1];
-new Incoming[MAXPLAYERS+1];
+int RPSWinner;
+int currentBossTeam;
+bool blueBoss;
+int OtherTeam=2;
+int BossTeam=3;
+int playing;
+int healthcheckused;
+int RedAlivePlayers;
+int BlueAlivePlayers;
+int RoundCount;
+int Companions=0;
+int GhostBoss=0;
+float rageMax[MAXPLAYERS+1];
+float rageMin[MAXPLAYERS+1];
+int rageMode[MAXPLAYERS+1];
+int Special[MAXPLAYERS+1];
+int Incoming[MAXPLAYERS+1];
 
-new Damage[MAXPLAYERS+1];
-new curHelp[MAXPLAYERS+1];
-new uberTarget[MAXPLAYERS+1];
-new shield[MAXPLAYERS+1];
-new detonations[MAXPLAYERS+1];
-new bool:playBGM[MAXPLAYERS+1]=true;
-new Healing[MAXPLAYERS+1];
+int Damage[MAXPLAYERS+1];
+int curHelp[MAXPLAYERS+1];
+int uberTarget[MAXPLAYERS+1];
+int shield[MAXPLAYERS+1];
+int detonations[MAXPLAYERS+1];
+bool playBGM[MAXPLAYERS+1]=true;
+int Healing[MAXPLAYERS+1];
 
-new Float:shieldHP[MAXPLAYERS+1];
-new String:currentBGM[MAXPLAYERS+1][PLATFORM_MAX_PATH];
+float shieldHP[MAXPLAYERS+1];
+char currentBGM[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
-new FF2flags[MAXPLAYERS+1];
+int FF2flags[MAXPLAYERS+1];
 
-new Boss[MAXPLAYERS+1];
-new BossHealthMax[MAXPLAYERS+1];
-new BossHealth[MAXPLAYERS+1];
-new BossHealthLast[MAXPLAYERS+1];
-new BossLives[MAXPLAYERS+1];
-new BossLivesMax[MAXPLAYERS+1];
-new BossRageDamage[MAXPLAYERS+1];
-new Float:BossCharge[MAXPLAYERS+1][8];
-new Float:Stabbed[MAXPLAYERS+1];
-new Float:Marketed[MAXPLAYERS+1];
-new Float:Cabered[MAXPLAYERS+1];
-new Float:KSpreeTimer[MAXPLAYERS+1];
-new KSpreeCount[MAXPLAYERS+1];
-new Float:GlowTimer[MAXPLAYERS+1];
-new shortname[MAXPLAYERS+1];
-new Float:RPSLoser[MAXPLAYERS+1];
-new RPSLosses[MAXPLAYERS+1];
-new RPSHealth[MAXPLAYERS+1];
-new Float:AirstrikeDamage[MAXPLAYERS+1];
-new Float:KillstreakDamage[MAXPLAYERS+1];
-new bool:emitRageSound[MAXPLAYERS+1];
-new bool:bossHasReloadAbility[MAXPLAYERS+1];
-new bool:bossHasRightMouseAbility[MAXPLAYERS+1];
+int Boss[MAXPLAYERS+1];
+int BossHealthMax[MAXPLAYERS+1];
+int BossHealth[MAXPLAYERS+1];
+int BossHealthLast[MAXPLAYERS+1];
+int BossLives[MAXPLAYERS+1];
+int BossLivesMax[MAXPLAYERS+1];
+int BossRageDamage[MAXPLAYERS+1];
+float BossCharge[MAXPLAYERS+1][8];
+float Stabbed[MAXPLAYERS+1];
+float Marketed[MAXPLAYERS+1];
+float Cabered[MAXPLAYERS+1];
+float KSpreeTimer[MAXPLAYERS+1];
+int KSpreeCount[MAXPLAYERS+1];
+float GlowTimer[MAXPLAYERS+1];
+int shortname[MAXPLAYERS+1];
+float RPSLoser[MAXPLAYERS+1];
+int RPSLosses[MAXPLAYERS+1];
+int RPSHealth[MAXPLAYERS+1];
+float AirstrikeDamage[MAXPLAYERS+1];
+float KillstreakDamage[MAXPLAYERS+1];
+bool emitRageSound[MAXPLAYERS+1];
+bool bossHasReloadAbility[MAXPLAYERS+1];
+bool bossHasRightMouseAbility[MAXPLAYERS+1];
 
-new timeleft;
-new cursongId[MAXPLAYERS+1]=1;
+int timeleft;
+int cursongId[MAXPLAYERS+1]=1;
 
-new Handle:cvarVersion;
-new Handle:cvarPointDelay;
-new Handle:cvarPointTime;
-new Handle:cvarAnnounce;
-new Handle:cvarEnabled;
-new Handle:cvarAliveToEnable;
-new Handle:cvarPointType;
-new Handle:cvarCrits;
-new Handle:cvarArenaRounds;
-new Handle:cvarCircuitStun;
-new Handle:cvarSpecForceBoss;
-new Handle:cvarCountdownPlayers;
-new Handle:cvarCountdownTime;
-new Handle:cvarCountdownHealth;
-new Handle:cvarCountdownResult;
-new Handle:cvarEnableEurekaEffect;
-new Handle:cvarForceBossTeam;
-new Handle:cvarHealthBar;
-new Handle:cvarLastPlayerGlow;
-new Handle:cvarBossTeleporter;
-new Handle:cvarBossSuicide;
-new Handle:cvarShieldCrits;
-//new Handle:cvarCaberDetonations;
-new Handle:cvarGoombaDamage;
-new Handle:cvarGoombaRebound;
-new Handle:cvarBossRTD;
-new Handle:cvarDeadRingerHud;
-new Handle:cvarUpdater;
-new Handle:cvarDebug;
-new Handle:cvarDebugMsg;
-new Handle:cvarPreroundBossDisconnect;
-new Handle:cvarDmg2KStreak;
-new Handle:cvarAirStrike;
-new Handle:cvarSniperDamage;
-new Handle:cvarSniperMiniDamage;
-new Handle:cvarBowDamage;
-new Handle:cvarBowDamageNon;
-new Handle:cvarBowDamageMini;
-new Handle:cvarSniperClimbDamage;
-new Handle:cvarSniperClimbDelay;
-new Handle:cvarStrangeWep;
-new Handle:cvarQualityWep;
-new Handle:cvarTripleWep;
-new Handle:cvarHardcodeWep;
-new Handle:cvarSelfKnockback;
-new Handle:cvarNameChange;
-new Handle:cvarKeepBoss;
-new Handle:cvarSelectBoss;
-new Handle:cvarToggleBoss;
-new Handle:cvarDuoBoss;
-new Handle:cvarPointsInterval;
-new Handle:cvarPointsMin;
-new Handle:cvarPointsDamage;
-new Handle:cvarPointsExtra;
-new Handle:cvarAdvancedMusic;
-new Handle:cvarSongInfo;
-new Handle:cvarDuoRandom;
-new Handle:cvarDuoMin;
-//new Handle:cvarNewDownload;
-new Handle:cvarDuoRestore;
-new Handle:cvarLowStab;
-new Handle:cvarGameText;
-new Handle:cvarAnnotations;
-new Handle:cvarTellName;
-new Handle:cvarGhostBoss;
-new Handle:cvarShieldType;
-new Handle:cvarCountdownOvertime;
-new Handle:cvarBossLog;
-new Handle:cvarBossDesc;
-new Handle:cvarRPSPoints;
-new Handle:cvarRPSLimit;
-new Handle:cvarRPSDivide;
-new Handle:cvarHealingHud;
+ConVar cvarVersion;
+ConVar cvarPointDelay;
+ConVar cvarPointTime;
+ConVar cvarAnnounce;
+ConVar cvarEnabled;
+ConVar cvarAliveToEnable;
+ConVar cvarPointType;
+ConVar cvarCrits;
+ConVar cvarArenaRounds;
+ConVar cvarCircuitStun;
+ConVar cvarSpecForceBoss;
+ConVar cvarCountdownPlayers;
+ConVar cvarCountdownTime;
+ConVar cvarCountdownHealth;
+ConVar cvarCountdownResult;
+ConVar cvarEnableEurekaEffect;
+ConVar cvarForceBossTeam;
+ConVar cvarHealthBar;
+ConVar cvarLastPlayerGlow;
+ConVar cvarBossTeleporter;
+ConVar cvarBossSuicide;
+ConVar cvarShieldCrits;
+ConVar cvarGoombaDamage;
+ConVar cvarGoombaRebound;
+ConVar cvarBossRTD;
+ConVar cvarDeadRingerHud;
+ConVar cvarUpdater;
+ConVar cvarDebug;
+ConVar cvarDebugMsg;
+ConVar cvarPreroundBossDisconnect;
+ConVar cvarDmg2KStreak;
+ConVar cvarAirStrike;
+ConVar cvarSniperDamage;
+ConVar cvarSniperMiniDamage;
+ConVar cvarBowDamage;
+ConVar cvarBowDamageNon;
+ConVar cvarBowDamageMini;
+ConVar cvarSniperClimbDamage;
+ConVar cvarSniperClimbDelay;
+ConVar cvarStrangeWep;
+ConVar cvarQualityWep;
+ConVar cvarTripleWep;
+ConVar cvarHardcodeWep;
+ConVar cvarSelfKnockback;
+ConVar cvarNameChange;
+ConVar cvarKeepBoss;
+ConVar cvarSelectBoss;
+ConVar cvarToggleBoss;
+ConVar cvarDuoBoss;
+ConVar cvarPointsInterval;
+ConVar cvarPointsMin;
+ConVar cvarPointsDamage;
+ConVar cvarPointsExtra;
+ConVar cvarAdvancedMusic;
+ConVar cvarSongInfo;
+ConVar cvarDuoRandom;
+ConVar cvarDuoMin;
+ConVar cvarDuoRestore;
+ConVar cvarLowStab;
+ConVar cvarGameText;
+ConVar cvarAnnotations;
+ConVar cvarTellName;
+ConVar cvarGhostBoss;
+ConVar cvarShieldType;
+ConVar cvarCountdownOvertime;
+ConVar cvarBossLog;
+ConVar cvarBossDesc;
+ConVar cvarRPSPoints;
+ConVar cvarRPSLimit;
+ConVar cvarRPSDivide;
+ConVar cvarHealingHud;
 
-new Handle:FF2Cookies;
+Handle FF2Cookies;
 
-new Handle:jumpHUD;
-new Handle:rageHUD;
-new Handle:livesHUD;
-new Handle:timeleftHUD;
-new Handle:abilitiesHUD;
-new Handle:infoHUD;
-//new Handle:lifeHUD;
+Handle jumpHUD;
+Handle rageHUD;
+Handle livesHUD;
+Handle timeleftHUD;
+Handle abilitiesHUD;
+Handle infoHUD;
+//Handle lifeHUD;
 
-new bool:Enabled=true;
-new bool:Enabled2=true;
-new PointDelay=6;
-new PointTime=45;
-new Float:Announce=120.0;
-new AliveToEnable=5;
-new PointType;
-new arenaRounds;
-new Float:circuitStun;
-new countdownPlayers=1;
-new countdownTime=120;
-new countdownHealth=2000;
-new bool:countdownOvertime=false;
-new bool:SpecForceBoss;
-new lastPlayerGlow=1;
-new bool:bossTeleportation=true;
-new shieldCrits;
-//new allowedDetonations;
-new Float:GoombaDamage=0.05;
-new Float:reboundPower=300.0;
-new bool:canBossRTD;
-new DebugMsgFreeze;
-new Float:SniperDamage=2.5;
-new Float:SniperMiniDamage=2.1;
-new Float:BowDamage=1.25;
-new Float:BowDamageNon=0.0;
-new Float:BowDamageMini=0.0;
-new Float:SniperClimbDamage=15.0;
-new Float:SniperClimbDelay=1.56;
-new QualityWep=5;
-new PointsInterval=600;
-new Float:PointsInterval2=600.0;
-new PointsMin=10;
-new PointsDamage=0;
-new PointsExtra=10;
-new bool:DuoMin=false;
+bool Enabled=true;
+bool Enabled2=true;
+int PointDelay=6;
+int PointTime=45;
+float Announce=120.0;
+int AliveToEnable=5;
+int PointType;
+int arenaRounds;
+float circuitStun;
+int countdownPlayers=1;
+int countdownTime=120;
+int countdownHealth=2000;
+bool countdownOvertime=false;
+bool SpecForceBoss;
+int lastPlayerGlow=1;
+bool bossTeleportation=true;
+int shieldCrits;
+float GoombaDamage=0.05;
+float reboundPower=300.0;
+bool canBossRTD;
+int DebugMsgFreeze;
+float SniperDamage=2.5;
+float SniperMiniDamage=2.1;
+float BowDamage=1.25;
+float BowDamageNon=0.0;
+float BowDamageMini=0.0;
+float SniperClimbDamage=15.0;
+float SniperClimbDelay=1.56;
+int QualityWep=5;
+int PointsInterval=600;
+float PointsInterval2=600.0;
+int PointsMin=10;
+int PointsDamage=0;
+int PointsExtra=10;
+bool DuoMin=false;
 
-new Handle:MusicTimer[MAXPLAYERS+1];
-new Handle:BossInfoTimer[MAXPLAYERS+1][2];
-new Handle:DrawGameTimer;
-new Handle:doorCheckTimer;
+Handle MusicTimer[MAXPLAYERS+1];
+Handle BossInfoTimer[MAXPLAYERS+1][2];
+Handle DrawGameTimer;
+Handle doorCheckTimer;
 
-new botqueuepoints;
-new Float:HPTime;
-new String:currentmap[99];
-new bool:checkDoors=false;
-new bool:bMedieval;
-new bool:firstBlood;
+int botqueuepoints;
+float HPTime;
+char currentmap[99];
+bool checkDoors=false;
+bool bMedieval;
+bool firstBlood;
 
-new tf_arena_use_queue;
-new mp_teams_unbalance_limit;
-new tf_arena_first_blood;
-new mp_forcecamera;
-new tf_dropped_weapon_lifetime;
-new String:mp_humans_must_join_team[16];
+int tf_arena_use_queue;
+int mp_teams_unbalance_limit;
+int tf_arena_first_blood;
+int mp_forcecamera;
+int tf_dropped_weapon_lifetime;
+char mp_humans_must_join_team[16];
 
-new Handle:cvarNextmap;
-new bool:areSubPluginsEnabled;
+Handle cvarNextmap;
+bool areSubPluginsEnabled;
 
-new FF2CharSet;
-new validCharsets[64];
-new String:FF2CharSetString[42];
-new bool:isCharSetSelected=false;
+int FF2CharSet;
+int validCharsets[64];
+chat FF2CharSetString[42];
+bool isCharSetSelected=false;
 
-new healthBar=-1;
-new g_Monoculus=-1;
+int healthBar=-1;
+int g_Monoculus=-1;
 
-static bool:executed=false;
-static bool:executed2=false;
-static bool:ReloadFF2=false;
-static bool:ReloadWeapons=false;
-static bool:ReloadConfigs=false;
-new bool:LoadCharset=false;
-static bool:HasSwitched=false;
+static bool executed=false;
+static bool executed2=false;
+static bool ReloadFF2=false;
+static bool ReloadWeapons=false;
+static bool ReloadConfigs=false;
+bool LoadCharset=false;
+static bool HasSwitched=false;
 
-new Handle:hostName;
-new String:oldName[256];
-new changeGamemode;
-new Handle:kvWeaponMods=INVALID_HANDLE;
+Handle hostName;
+char oldName[256];
+int changeGamemode;
+Handle kvWeaponMods=INVALID_HANDLE;
 
-new bool:IsBossSelected[MAXPLAYERS+1];
-new bool:dmgTriple[MAXPLAYERS+1];
-new bool:selfKnockback[MAXPLAYERS+1];
-new bool:randomCrits[MAXPLAYERS+1];
+bool IsBossSelected[MAXPLAYERS+1];
+bool dmgTriple[MAXPLAYERS+1];
+bool selfKnockback[MAXPLAYERS+1];
+bool randomCrits[MAXPLAYERS+1];
 
 static const char OTVoice[][] = {
     "vo/announcer_overtime.mp3",
@@ -1661,35 +1658,34 @@ stock FindVersionData(Handle:panel, versionIndex)
 static const maxVersion=sizeof(ff2versiontitles)-1;
 
 new Specials;
-new Handle:BossKV[MAXSPECIALS];
-new Handle:PreAbility;
-new Handle:OnAbility;
-new Handle:OnMusic;
-new Handle:OnTriggerHurt;
-new Handle:OnSpecialSelected;
-new Handle:OnAddQueuePoints;
-new Handle:OnLoadCharacterSet;
-new Handle:OnLoseLife;
-new Handle:OnAlivePlayersChanged;
+Handle BossKV[MAXSPECIALS];
+Handle PreAbility;
+Handle OnAbility;
+Handle OnMusic;
+Handle OnTriggerHurt;
+Handle OnSpecialSelected;
+Handle OnAddQueuePoints;
+Handle OnLoadCharacterSet;
+Handle OnLoseLife;
+Handle OnAlivePlayersChanged;
 
-new bool:bBlockVoice[MAXSPECIALS];
-new Float:BossSpeed[MAXSPECIALS];
-//new Float:BossRageDamage[MAXSPECIALS];
+bool bBlockVoice[MAXSPECIALS];
+Float BossSpeed[MAXSPECIALS];
 
-new String:ChancesString[512];
-new chances[MAXSPECIALS*2];  //This is multiplied by two because it has to hold both the boss indices and chances
-new chancesIndex;
+String ChancesString[512];
+int chances[MAXSPECIALS*2];  //This is multiplied by two because it has to hold both the boss indices and chances
+int chancesIndex;
 
-public Plugin:myinfo=
+public Plugin myinfo=
 {
-	name="Freak Fortress 2",
-	author="Many many people",
-	description="RUUUUNN!! COWAAAARRDSS!",
-	version=PLUGIN_VERSION,
-	url="https://forums.alliedmods.net/forumdisplay.php?f=154",
+	name		=	"Freak Fortress 2",
+	author		=	"Many many people",
+	description	=	"RUUUUNN!! COWAAAARRDSS!",
+	version		=	PLUGIN_VERSION,
+	url		=	"https://forums.alliedmods.net/forumdisplay.php?f=154",
 };
 
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char error[], err_max)
 {
 	decl String:plugin[PLATFORM_MAX_PATH];
 	GetPluginFilename(myself, plugin, sizeof(plugin));
@@ -1790,7 +1786,7 @@ new bool:InfiniteRageActive[MAXPLAYERS+1]=false;
 char bLog[PLATFORM_MAX_PATH];
 char pLog[PLATFORM_MAX_PATH];
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	LogMessage("===Freak Fortress 2 Initializing-v%s===", PLUGIN_VERSION);
 
@@ -1991,7 +1987,7 @@ public OnPluginStart()
 	RegConsoleCmd("hale_toggle", BossMenu, "Toggle being a FF2 boss");
 	RegConsoleCmd("halecompanion", CompanionMenu, "Toggle being a FF2 companion");
 	RegConsoleCmd("hale_companion", CompanionMenu, "Toggle being a FF2 companion");
-	for(new i = 0; i < MAXPLAYERS; i++)
+	for(int i = 0; i < MAXPLAYERS; i++)
 	{
 		ClientCookie[i] = TOGGLE_UNDEF;
 		ClientCookie2[i] = TOGGLE_UNDEF;
@@ -2063,7 +2059,7 @@ public OnPluginStart()
 	infoHUD=CreateHudSynchronizer();
 	//lifeHUD=CreateHudSynchronizer();
 
-	decl String:oldVersion[64];
+	decl oldVersion[64];
 	GetConVarString(cvarVersion, oldVersion, sizeof(oldVersion));
 	if(strcmp(oldVersion, PLUGIN_VERSION, false))
 	{
@@ -2094,7 +2090,7 @@ public OnPluginStart()
 	#endif
 }
 
-public Action:Command_SetRage(client, args)
+public Action Command_SetRage(int client, int args)
 {
 	if(args!=2)
 	{
@@ -2116,9 +2112,9 @@ public Action:Command_SetRage(client, args)
 				return Plugin_Handled;
 			}
 			
-			new String:ragePCT[80];
+			char ragePCT[80];
 			GetCmdArg(1, ragePCT, sizeof(ragePCT));
-			new Float:rageMeter=StringToFloat(ragePCT);
+			float rageMeter=StringToFloat(ragePCT);
 			
 			BossCharge[Boss[client]][0]=rageMeter;
 			CReplyToCommand(client, "You now have %i percent RAGE (%i percent added)", RoundFloat(BossCharge[client][0]), RoundFloat(rageMeter));
@@ -2127,15 +2123,15 @@ public Action:Command_SetRage(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String:ragePCT[80];
-	new String:targetName[PLATFORM_MAX_PATH];
+	char ragePCT[80];
+	char targetName[PLATFORM_MAX_PATH];
 	GetCmdArg(1, targetName, sizeof(targetName));
 	GetCmdArg(2, ragePCT, sizeof(ragePCT));
-	new Float:rageMeter=StringToFloat(ragePCT);
+	float rageMeter=StringToFloat(ragePCT);
 
-	new String:target_name[MAX_TARGET_LENGTH];
-	new target_list[MAXPLAYERS], target_count;
-	new bool:tn_is_ml;
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	if((target_count=ProcessTargetString(targetName, client, target_list, MaxClients, 0, target_name, sizeof(target_name), tn_is_ml))<=0)
 	{
@@ -2163,7 +2159,7 @@ public Action:Command_SetRage(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_AddRage(client, args)
+public Action Command_AddRage(int client, int args)
 {
 	if(args!=2)
 	{
@@ -2185,9 +2181,9 @@ public Action:Command_AddRage(client, args)
 				return Plugin_Handled;
 			}
 			
-			new String:ragePCT[80];
+			char ragePCT[80];
 			GetCmdArg(1, ragePCT, sizeof(ragePCT));
-			new Float:rageMeter=StringToFloat(ragePCT);
+			float rageMeter=StringToFloat(ragePCT);
 			
 			BossCharge[Boss[client]][0]+=rageMeter;
 			CReplyToCommand(client, "You now have %i percent RAGE (%i percent added)", RoundFloat(BossCharge[client][0]), RoundFloat(rageMeter));
@@ -2196,15 +2192,15 @@ public Action:Command_AddRage(client, args)
 		return Plugin_Handled;
 	}
 	
-	new String:ragePCT[80];
-	new String:targetName[PLATFORM_MAX_PATH];
+	char ragePCT[80];
+	char targetName[PLATFORM_MAX_PATH];
 	GetCmdArg(1, targetName, sizeof(targetName));
 	GetCmdArg(2, ragePCT, sizeof(ragePCT));
-	new Float:rageMeter=StringToFloat(ragePCT);
+	float rageMeter=StringToFloat(ragePCT);
 
-	new String:target_name[MAX_TARGET_LENGTH];
-	new target_list[MAXPLAYERS], target_count;
-	new bool:tn_is_ml;
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	if((target_count=ProcessTargetString(targetName, client, target_list, MaxClients, 0, target_name, sizeof(target_name), tn_is_ml))<=0)
 	{
@@ -2232,7 +2228,7 @@ public Action:Command_AddRage(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_SetInfiniteRage(client, args)
+public Action Command_SetInfiniteRage(int client, int args)
 {
 	if(args!=1)
 	{
@@ -2271,12 +2267,12 @@ public Action:Command_SetInfiniteRage(client, args)
 		return Plugin_Handled;
 	}
 
-	new String:targetName[PLATFORM_MAX_PATH];
+	char targetName[PLATFORM_MAX_PATH];
 	GetCmdArg(1, targetName, sizeof(targetName));
 
-	new String:target_name[MAX_TARGET_LENGTH];
-	new target_list[MAXPLAYERS], target_count;
-	new bool:tn_is_ml;
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	if((target_count=ProcessTargetString(targetName, client, target_list, MaxClients, 0, target_name, sizeof(target_name), tn_is_ml))<=0)
 	{
@@ -2284,7 +2280,7 @@ public Action:Command_SetInfiniteRage(client, args)
 		return Plugin_Handled;
 	}
 
-	for(new target; target<target_count; target++)
+	for(int target; target<target_count; target++)
 	{
 		if(IsClientSourceTV(target_list[target]) || IsClientReplay(target_list[target]))
 		{
@@ -2315,7 +2311,7 @@ public Action:Command_SetInfiniteRage(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Timer_InfiniteRage(Handle:timer, any:client)
+public Action Timer_InfiniteRage(Handle timer, any client)
 {
 	if(InfiniteRageActive[client] && (CheckRoundState()==2 || CheckRoundState()==-1))
 		InfiniteRageActive[client]=false;
@@ -2332,10 +2328,10 @@ public Action:Timer_InfiniteRage(Handle:timer, any:client)
 	return Plugin_Continue;
 }
 
-public bool:BossTargetFilter(const String:pattern[], Handle:clients)
+public bool BossTargetFilter(const char pattern[], Handle clients)
 {
-	new bool:non=StrContains(pattern, "!", false)!=-1;
-	for(new client=1; client<=MaxClients; client++)
+	bool non=StrContains(pattern, "!", false)!=-1;
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && FindValueInArray(clients, client)==-1)
 		{
@@ -2355,7 +2351,7 @@ public bool:BossTargetFilter(const String:pattern[], Handle:clients)
 	return true;
 }
 
-public OnLibraryAdded(const String:name[])
+public OnLibraryAdded(const char name[])
 {
 	#if defined _steamtools_included
 	if(!strcmp(name, "SteamTools", false))
@@ -2391,7 +2387,7 @@ public OnLibraryAdded(const String:name[])
 	#endif
 }
 
-public OnLibraryRemoved(const String:name[])
+public OnLibraryRemoved(const char name[])
 {
 	#if defined _steamtools_included
 	if(!strcmp(name, "SteamTools", false))
@@ -2464,7 +2460,7 @@ public OnMapStart()
 	HPTime=0.0;
 	doorCheckTimer=INVALID_HANDLE;
 	RoundCount=0;
-	for(new client; client<=MaxClients; client++)
+	for(int client; client<=MaxClients; client++)
 	{
 		KSpreeTimer[client]=0.0;
 		FF2flags[client]=0;
@@ -2476,7 +2472,7 @@ public OnMapStart()
 		RPSLoser[client]=-1.0;
 	}
 
-	for(new specials; specials<MAXSPECIALS; specials++)
+	for(int specials; specials<MAXSPECIALS; specials++)
 	{
 		if(BossKV[specials]!=INVALID_HANDLE)
 		{
@@ -2498,7 +2494,7 @@ public OnPluginEnd()
 {
 	OnMapEnd();
 	SetConVarString(hostName, oldName);
-	if (!ReloadFF2 && CheckRoundState() == 1)
+	if(!ReloadFF2 && CheckRoundState() == 1)
 	{
 		ForceTeamWin(0);
 		CPrintToChatAll("{olive}[FF2]{default} The plugin has been unexpectedly unloaded!");
@@ -2553,7 +2549,7 @@ public EnableFF2()
 	SetConVarInt(FindConVar("tf_dropped_weapon_lifetime"), 0);
 	SetConVarString(FindConVar("mp_humans_must_join_team"), "any");
 
-	new Float:time=Announce;
+	float time=Announce;
 	if(time>1.0)
 	{
 		CreateTimer(time, Timer_Announce, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -2577,7 +2573,7 @@ public EnableFF2()
 	#if defined _steamtools_included
 	if(steamtools)
 	{
-		decl String:gameDesc[64];
+		decl gameDesc[64];
 		Format(gameDesc, sizeof(gameDesc), "Freak Fortress 2 (%s)", PLUGIN_VERSION);
 		Steam_SetGameDescription(gameDesc);
 	}
@@ -2607,7 +2603,7 @@ public DisableFF2()
 		doorCheckTimer=INVALID_HANDLE;
 	}
 
-	for(new client=1; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
@@ -2654,7 +2650,7 @@ public DisableFF2()
 
 public CacheWeapons()
 {
-	decl String:config[PLATFORM_MAX_PATH];
+	decl config[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s", DataPath, WeaponCFG);
 	
 	if(!FileExists(config))
@@ -2677,7 +2673,7 @@ public CacheWeapons()
 
 public FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextKey
 {
-	new String:config[PLATFORM_MAX_PATH], String:key[4], String:charset[42];
+	char config[PLATFORM_MAX_PATH], key[4], charset[42];
 	Specials=0;
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s", DataPath, CharsetCFG);
 
@@ -2692,11 +2688,10 @@ public FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextKey
 		return;
 	}
 
-	new Handle:Kv=CreateKeyValues("");
+	Handle Kv=CreateKeyValues("");
 	FileToKeyValues(Kv, config);
-	new NumOfCharSet=FF2CharSet;
-
-	new Action:action=Plugin_Continue;
+	int NumOfCharSet=FF2CharSet;
+	Action action=Plugin_Continue;
 	Call_StartForward(OnLoadCharacterSet);
 	Call_PushCellRef(NumOfCharSet);
 	strcopy(charset, sizeof(charset), FF2CharSetString);
@@ -2704,7 +2699,7 @@ public FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextKey
 	Call_Finish(action);
 	if(action==Plugin_Changed)
 	{
-		new i=-1;
+		int i=-1;
 		if(strlen(charset))
 		{
 			KvRewind(Kv);
@@ -2740,12 +2735,12 @@ public FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextKey
 	}
 
 	KvRewind(Kv);
-	for(new i; i<FF2CharSet; i++)
+	for(int i; i<FF2CharSet; i++)
 	{
 		KvGotoNextKey(Kv);
 	}
 
-	for(new i=1; i<MAXSPECIALS; i++)
+	for(int i=1; i<MAXSPECIALS; i++)
 	{
 		IntToString(i, key, sizeof(key));
 		KvGetString(Kv, key, config, PLATFORM_MAX_PATH);
@@ -2761,9 +2756,9 @@ public FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextKey
 
 	if(ChancesString[0])
 	{
-		decl String:stringChances[MAXSPECIALS*2][8];
+		decl stringChances[MAXSPECIALS*2][8];
 
-		new amount=ExplodeString(ChancesString, ";", stringChances, MAXSPECIALS*2, 8);
+		int amount=ExplodeString(ChancesString, ";", stringChances, MAXSPECIALS*2, 8);
 		if(amount % 2)
 		{
 			LogError("[FF2 Bosses] Invalid chances string, disregarding chances");
@@ -2814,7 +2809,7 @@ public FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextKey
 	isCharSetSelected=false;
 }
 
-EnableSubPlugins(bool:force=false)
+EnableSubPlugins(bool force=false)
 {
 	if(areSubPluginsEnabled && !force)
 	{
@@ -2823,10 +2818,10 @@ EnableSubPlugins(bool:force=false)
 
 	areSubPluginsEnabled=true;
 	DebugMsg(0, "Loading sub-plugins");
-	decl String:path[PLATFORM_MAX_PATH], String:filename[PLATFORM_MAX_PATH], String:filename_old[PLATFORM_MAX_PATH];
+	decl path[PLATFORM_MAX_PATH], filename[PLATFORM_MAX_PATH], filename_old[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, path, sizeof(path), "plugins/freaks");
-	new FileType:filetype;
-	new Handle:directory=OpenDirectory(path);
+	FileType filetype;
+	Handle directory=OpenDirectory(path);
 	while(ReadDirEntry(directory, filename, sizeof(filename), filetype))
 	{
 		if(filetype==FileType_File && StrContains(filename, ".smx", false)!=-1)
