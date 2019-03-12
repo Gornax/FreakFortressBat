@@ -1685,9 +1685,9 @@ public Plugin myinfo=
 	url		=	"https://forums.alliedmods.net/forumdisplay.php?f=154",
 };
 
-public APLRes AskPluginLoad2(Handle myself, bool late, const char[] error, err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	decl char plugin[PLATFORM_MAX_PATH];
+	char plugin[PLATFORM_MAX_PATH];
 	GetPluginFilename(myself, plugin, sizeof(plugin));
 	if(!StrContains(plugin, "freaks/"))  //Prevent plugins/freaks/freak_fortress_2.ff2 from loading if it exists -.-
 	{
@@ -2059,7 +2059,7 @@ public void OnPluginStart()
 	infoHUD=CreateHudSynchronizer();
 	//lifeHUD=CreateHudSynchronizer();
 
-	decl char oldVersion[64];
+	char oldVersion[64];
 	GetConVarString(cvarVersion, oldVersion, sizeof(oldVersion));
 	if(strcmp(oldVersion, PLUGIN_VERSION, false))
 	{
