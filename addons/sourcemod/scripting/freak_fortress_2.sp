@@ -335,7 +335,7 @@ bool areSubPluginsEnabled;
 
 int FF2CharSet;
 int validCharsets[64];
-chat FF2CharSetString[42];
+char FF2CharSetString[42];
 bool isCharSetSelected=false;
 
 int healthBar=-1;
@@ -1670,9 +1670,9 @@ Handle OnLoseLife;
 Handle OnAlivePlayersChanged;
 
 bool bBlockVoice[MAXSPECIALS];
-Float BossSpeed[MAXSPECIALS];
+float BossSpeed[MAXSPECIALS];
 
-String ChancesString[512];
+char ChancesString[512];
 int chances[MAXSPECIALS*2];  //This is multiplied by two because it has to hold both the boss indices and chances
 int chancesIndex;
 
@@ -1685,9 +1685,9 @@ public Plugin myinfo=
 	url		=	"https://forums.alliedmods.net/forumdisplay.php?f=154",
 };
 
-public APLRes AskPluginLoad2(Handle myself, bool late, char error[], err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, const char[] error, err_max)
 {
-	decl String:plugin[PLATFORM_MAX_PATH];
+	decl char plugin[PLATFORM_MAX_PATH];
 	GetPluginFilename(myself, plugin, sizeof(plugin));
 	if(!StrContains(plugin, "freaks/"))  //Prevent plugins/freaks/freak_fortress_2.ff2 from loading if it exists -.-
 	{
@@ -2059,7 +2059,7 @@ public void OnPluginStart()
 	infoHUD=CreateHudSynchronizer();
 	//lifeHUD=CreateHudSynchronizer();
 
-	decl oldVersion[64];
+	decl char oldVersion[64];
 	GetConVarString(cvarVersion, oldVersion, sizeof(oldVersion));
 	if(strcmp(oldVersion, PLUGIN_VERSION, false))
 	{
@@ -2328,7 +2328,7 @@ public Action Timer_InfiniteRage(Handle timer, any client)
 	return Plugin_Continue;
 }
 
-public bool BossTargetFilter(const char pattern[], Handle clients)
+public bool BossTargetFilter(const char[] pattern, Handle clients)
 {
 	bool non=StrContains(pattern, "!", false)!=-1;
 	for(int client=1; client<=MaxClients; client++)
@@ -2351,7 +2351,7 @@ public bool BossTargetFilter(const char pattern[], Handle clients)
 	return true;
 }
 
-public OnLibraryAdded(const char name[])
+public OnLibraryAdded(const char[] name)
 {
 	#if defined _steamtools_included
 	if(!strcmp(name, "SteamTools", false))
@@ -2387,7 +2387,7 @@ public OnLibraryAdded(const char name[])
 	#endif
 }
 
-public OnLibraryRemoved(const char name[])
+public OnLibraryRemoved(const char[] name)
 {
 	#if defined _steamtools_included
 	if(!strcmp(name, "SteamTools", false))
