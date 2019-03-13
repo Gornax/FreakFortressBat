@@ -2581,14 +2581,14 @@ public EnableFF2()
 
 	changeGamemode=0;
 	
-	for(int client; client<=MaxClients; client++)
+	/*for(int client; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
 			SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
 		}
-	}
+	}*/
 }
 
 public DisableFF2()
@@ -3075,7 +3075,7 @@ public PrecacheCharacter(int characterIndex)
 	}
 }
 
-public CvarChange(Handle convar, const char oldValue[], const char newValue[])
+public CvarChange(Handle convar, const char[] oldValue, const char[] newValue)
 {
 	if(convar==cvarAnnounce)
 	{
