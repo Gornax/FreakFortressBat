@@ -45,7 +45,7 @@ last time or to encourage others to do the same.
   http://forums.alliedmods.net/showthread.php?t=313008
 */
 #pragma semicolon 1
-#pragma newdecls required
+//#pragma newdecls required
 
 #include <sourcemod>
 #include <freak_fortress_2>
