@@ -385,7 +385,7 @@ enum Operators
 	Operator_Exponent,
 };
 
-static const char[] ff2versiontitles[]=
+static const char[][] ff2versiontitles=
 {
 	"1.0",
 	"1.01",
@@ -529,7 +529,7 @@ static const char[] ff2versiontitles[]=
 	"1.17.10"
 };
 
-static const char[] ff2versiondates[]=
+static const char[][] ff2versiondates=
 {
 	"April 6, 2012",			//1.0
 	"April 14, 2012",		//1.01
@@ -8522,7 +8522,7 @@ public Action OnJoinTeam(int client, const char[] command, int args)
 		return Plugin_Continue;
 	}
 
-	int team=_:TFTeam_Unassigned, oldTeam=GetClientTeam(client)
+	int team=_:TFTeam_Unassigned, oldTeam=GetClientTeam(client);
 	char teamString[10];
 	GetCmdArg(1, teamString, sizeof(teamString));
 
@@ -8807,7 +8807,7 @@ public Action Timer_Damage(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Actio OnObjectDeflected(Handle event, const char[] name, bool dontBroadcast)
+public Action OnObjectDeflected(Handle event, const char[] name, bool dontBroadcast)
 {
 	if(!Enabled || GetEventInt(event, "weaponid"))  //0 means that the client was airblasted, which is what we want
 	{
@@ -10457,7 +10457,8 @@ stock SpawnSmallHealthPackAt(int client, int team=0, int attacker)
 		return;
 	}
 
-	int healthpack=CreateEntityByName("item_healthkit_small"), Float:position[3];
+	int healthpack=CreateEntityByName("item_healthkit_small");
+	float position[3];
 	GetClientAbsOrigin(client, position);
 	position[2]+=20.0;
 	if(IsValidEntity(healthpack))
@@ -11101,7 +11102,7 @@ stock bool RandomSound(const char[] sound, char[] file, int length, int boss=0)
 	return true;
 }
 
-stock bool RandomSoundAbility(const char[] sound, char[] file[], int length, int boss=0, int slot=0)
+stock bool RandomSoundAbility(const char[] sound, char[] file, int length, int boss=0, int slot=0)
 {
 	if(boss<0 || Special[boss]<0 || !BossKV[Special[boss]])
 	{
