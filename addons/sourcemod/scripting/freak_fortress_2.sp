@@ -9140,8 +9140,8 @@ public Action OnPlayerHurt(Handle event, const char[] name, bool dontBroadcast)
 		{
 			SetEntityHealth(client, (BossHealth[boss]-damage)-BossHealthMax[boss]*(lives-1)); //Set the health early to avoid the boss dying from fire, etc.
 
-			Action action=Plugin_Continue
-			int bossLives=BossLives[boss];  //Used for the forward
+			Action action=Plugin_Continue;  //Used for the forward
+			int bossLives=BossLives[boss];
 			Call_StartForward(OnLoseLife);
 			Call_PushCell(boss);
 			Call_PushCellRef(bossLives);
@@ -12583,7 +12583,7 @@ public VoiceTogglePanelH(Handle menu, MenuAction action, int client, int selecti
 	}
 }
 
-ToggleVoice(int client, boolenable)
+ToggleVoice(int client, bool enable)
 {
 	if(enable)
 	{
@@ -13127,7 +13127,7 @@ public Native_GetTeam(Handle plugin, int numParams)
 public Native_GetSpecial(Handle plugin, int numParams)
 {
 	int index=GetNativeCell(1), dstrlen=GetNativeCell(3), see=GetNativeCell(4);
-	char s[dstrlen];
+	new String:s[dstrlen];
 	if(see)
 	{
 		if(index<0) return false;
@@ -13310,7 +13310,7 @@ public Native_DoAbility(Handle plugin, int numParams)
 public Native_GetAbilityArgument(Handle plugin, int numParams)
 {
 	char plugin_name[64];
-	chat ability_name[64];
+	char ability_name[64];
 	GetNativeString(2,plugin_name,64);
 	GetNativeString(3,ability_name,64);
 	return GetAbilityArgument(GetNativeCell(1),plugin_name,ability_name,GetNativeCell(4),GetNativeCell(5));
@@ -13332,7 +13332,7 @@ public Native_GetAbilityArgumentString(Handle plugin, int numParams)
 	char ability_name[64];
 	GetNativeString(3,ability_name,64);
 	int dstrlen=GetNativeCell(6);
-	char s[dstrlen+1];
+	new String:s[dstrlen+1];
 	GetAbilityArgumentString(GetNativeCell(1),plugin_name,ability_name,GetNativeCell(4),s,dstrlen);
 	SetNativeString(5,s,dstrlen);
 }
@@ -13411,13 +13411,13 @@ public Native_RandomSound(Handle plugin, int numParams)
 	int length=GetNativeCell(3)+1;
 	int boss=GetNativeCell(4);
 	int slot=GetNativeCell(5);
-	char sound[length];
+	new String:sound[length];
 	int kvLength;
 
 	GetNativeStringLength(1, kvLength);
 	kvLength++;
 
-	char keyvalue[kvLength];
+	decl String:keyvalue[kvLength];
 	GetNativeString(1, keyvalue, kvLength);
 
 	bool soundExists;
