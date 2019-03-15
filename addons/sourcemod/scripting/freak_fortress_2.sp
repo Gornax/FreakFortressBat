@@ -385,7 +385,7 @@ enum Operators
 	Operator_Exponent,
 };
 
-static const char[][] ff2versiontitles=
+static const char ff2versiontitles[][]=
 {
 	"1.0",
 	"1.01",
@@ -529,7 +529,7 @@ static const char[][] ff2versiontitles=
 	"1.17.10"
 };
 
-static const char[][] ff2versiondates=
+static const char ff2versiondates[][]=
 {
 	"April 6, 2012",			//1.0
 	"April 14, 2012",		//1.01
@@ -9140,7 +9140,8 @@ public Action OnPlayerHurt(Handle event, const char[] name, bool dontBroadcast)
 		{
 			SetEntityHealth(client, (BossHealth[boss]-damage)-BossHealthMax[boss]*(lives-1)); //Set the health early to avoid the boss dying from fire, etc.
 
-			Action action=Plugin_Continue, bossLives=BossLives[boss];  //Used for the forward
+			Action action=Plugin_Continue
+			int bossLives=BossLives[boss];  //Used for the forward
 			Call_StartForward(OnLoseLife);
 			Call_PushCell(boss);
 			Call_PushCellRef(bossLives);
@@ -10694,7 +10695,7 @@ public Timer_NoAttacking(any ref)
 	SetNextAttack(weapon, SniperClimbDelay);
 }
 
-stock GetClientWithMostQueuePoints(bool omit[])
+stock GetClientWithMostQueuePoints(bool[] omit)
 {
 	int winner;
 	for(int client=1; client<=MaxClients; client++)
@@ -10727,7 +10728,7 @@ stock GetClientWithMostQueuePoints(bool omit[])
 	return winner;
 }
 
-stock GetRandomValidClient(bool omit[])
+stock GetRandomValidClient(bool[] omit)
 {
 	int companion;
 	for(int client=1; client<=MaxClients; client++)
@@ -10864,7 +10865,7 @@ stock ParseFormula(int boss, const char[] key, const char[] defaultFormula, int 
 		}
 	}
 
-	Handle sumArray=CreateArray(_, size), Handle:_operator=CreateArray(_, size);
+	Handle sumArray=CreateArray(_, size), _operator=CreateArray(_, size);
 	int bracket;  //Each bracket denotes a separate sum (within parentheses).  At the end, they're all added together to achieve the actual sum
 	SetArrayCell(sumArray, 0, 0.0);  //TODO:  See if these can be placed naturally in the loop
 	SetArrayCell(_operator, bracket, Operator_None);
@@ -10998,7 +10999,7 @@ stock GetAbilityArgument(int index, const char[] plugin_name, const char[] abili
 	return 0;
 }
 
-stock Float GetAbilityArgumentFloat(int index, const char[] plugin_name, const char[] ability_name, int arg, float defvalue=0.0)
+stock float GetAbilityArgumentFloat(int index, const char[] plugin_name, const char[] ability_name, int arg, float defvalue=0.0)
 {
 	if(index==-1 || Special[index]==-1 || !BossKV[Special[index]])
 		return 0.0;
@@ -11366,7 +11367,7 @@ public bool PickCharacter(int boss, int companion)
 	return true;
 }
 
-FindCompanion(int boss, int players, bool omit[])
+FindCompanion(int boss, int players, bool[] omit)
 {
 	static playersNeeded=2;
 	char companionName[64];
@@ -11458,7 +11459,7 @@ stock SpawnWeapon(int client, char[] name, int index, int level, int qual, char[
 	return entity;
 }
 
-stock SpawnCosmetic(int client, char[] name, int index, int level, int qual, char att[])
+stock SpawnCosmetic(int client, char[] name, int index, int level, int qual, char[] att)
 {
 	Handle hCosmetic=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
 	if(hCosmetic==INVALID_HANDLE)
@@ -11535,7 +11536,7 @@ public Action QueuePanelCmd(int client, int args)
 
 	char text[64];
 	int items;
-	bool added[(MaxClients+1)];
+	new bool:added[MaxClients+1];
 
 	Handle panel=CreatePanel();
 	Format(text, sizeof(text), "%T", "thequeue", client);  //"Boss Queue"
