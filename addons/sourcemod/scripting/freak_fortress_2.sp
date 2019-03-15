@@ -385,7 +385,7 @@ enum Operators
 	Operator_Exponent,
 };
 
-static const String:ff2versiontitles[][]=
+static const char[] ff2versiontitles[]=
 {
 	"1.0",
 	"1.01",
@@ -529,7 +529,7 @@ static const String:ff2versiontitles[][]=
 	"1.17.10"
 };
 
-static const String:ff2versiondates[][]=
+static const char[] ff2versiondates[]=
 {
 	"April 6, 2012",			//1.0
 	"April 14, 2012",		//1.01
@@ -1763,8 +1763,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 }
 
 // Boss Selection
-new String:xIncoming[MAXPLAYERS+1][700];
-new String:cIncoming[MAXPLAYERS+1][700];
+char xIncoming[MAXPLAYERS+1][700];
+char cIncoming[MAXPLAYERS+1][700];
 
 // Boss Toggle
 #define TOGGLE_UNDEF -1
@@ -1774,14 +1774,14 @@ new String:cIncoming[MAXPLAYERS+1][700];
 
 new Handle:BossCookie=INVALID_HANDLE;
 new Handle:CompanionCookie=INVALID_HANDLE;
+Handle cvarFF2TogglePrefDelay = INVALID_HANDLE;
 
-new ClientCookie[MAXPLAYERS+1];
-new ClientCookie2[MAXPLAYERS+1];
-new ClientPoint[MAXPLAYERS+1];
-new ClientID[MAXPLAYERS+1];
-new ClientQueue[MAXPLAYERS+1][2];
-new Handle:cvarFF2TogglePrefDelay = INVALID_HANDLE;
-new bool:InfiniteRageActive[MAXPLAYERS+1]=false;
+ClientCookie[MAXPLAYERS+1];
+ClientCookie2[MAXPLAYERS+1];
+ClientPoint[MAXPLAYERS+1];
+ClientID[MAXPLAYERS+1];
+ClientQueue[MAXPLAYERS+1][2];
+bool InfiniteRageActive[MAXPLAYERS+1]=false;
 
 // Boss Log
 char bLog[PLATFORM_MAX_PATH];
@@ -2896,7 +2896,7 @@ public LoadCharacter(const char[] character)
 		Format(config, 10, "ability%i", i);
 		if(KvJumpToKey(BossKV[Specials], config))
 		{
-			decl String:plugin_name[64];
+			char plugin_name[64];
 			KvGetString(BossKV[Specials], "plugin_name", plugin_name, 64);
 			BuildPath(Path_SM, config, sizeof(config), "plugins/freaks/%s.ff2", plugin_name);
 			if(!FileExists(config))
@@ -3408,7 +3408,7 @@ stock bool CheckToChangeMapDoors()
 	delete file;
 }
 
-public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnRoundStart(Handle:event, const char[] name, bool:dontBroadcast)
 {
 	isCapping=false;
 	if(changeGamemode==1)
@@ -6931,7 +6931,7 @@ stock RemovePlayerTarge(int client)
 	}
 }
 
-stock RemovePlayerBack(int client, const char[] indices, int length)
+stock RemovePlayerBack(int client, int[] indices, int length)
 {
 	if(length<=0)
 	{
@@ -7572,17 +7572,17 @@ public OnClientPostAdminCheck(int client)
 	}
 }
 
-public OnClientCookiesCached(client)
+public OnClientCookiesCached(int client)
 {
-	decl String:sEnabled[2];
+	char sEnabled[2];
 	GetClientCookie(client, BossCookie, sEnabled, sizeof(sEnabled));
 
-	new enabled = StringToInt(sEnabled);
+	int enabled = StringToInt(sEnabled);
 
-	if( 1 > enabled || 2 < enabled)
+	if(1>enabled || 2<enabled)
 	{
 		ClientCookie[client] = TOGGLE_UNDEF;
-		new Handle:clientPack = CreateDataPack();
+		Handle clientPack = CreateDataPack();
 		WritePackCell(clientPack, client);
 		CreateTimer(GetConVarFloat(cvarFF2TogglePrefDelay), BossMenuTimer, clientPack);
 	}
@@ -7595,7 +7595,7 @@ public OnClientCookiesCached(client)
 
 	enabled = StringToInt(sEnabled);
 
-	if( 1 > enabled || 2 < enabled)
+	if(1>enabled || 2<enabled)
 	{
 		ClientCookie2[client] = TOGGLE_UNDEF;
 		new Handle:clientPack = CreateDataPack();
@@ -8522,7 +8522,8 @@ public Action OnJoinTeam(int client, const char[] command, int args)
 		return Plugin_Continue;
 	}
 
-	int team=_:TFTeam_Unassigned, oldTeam=GetClientTeam(client), String:teamString[10];
+	int team=_:TFTeam_Unassigned, oldTeam=GetClientTeam(client)
+	char teamString[10];
 	GetCmdArg(1, teamString, sizeof(teamString));
 
 	if(StrEqual(teamString, "red", false))
@@ -8673,7 +8674,7 @@ public Action OverTimeAlert(Handle timer)
 	return Plugin_Continue;
 }
 
-public Action:OnPlayerDeath(Handle:event, const String:eventName[], bool:dontBroadcast)
+public Action:OnPlayerDeath(Handle event, const char[] eventName, bool dontBroadcast)
 {
 	if(!Enabled || CheckRoundState()!=1)
 	{
@@ -9075,7 +9076,7 @@ public Action:Timer_DrawGame(Handle:timer)
 		}
 		case 1, 2, 3, 4, 5:
 		{
-			decl String:sound[PLATFORM_MAX_PATH];
+			char sound[PLATFORM_MAX_PATH];
 			Format(sound, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", time);
 			EmitSoundToAll(sound);
 			DebugMsg(0, "%i sec", time);
@@ -10126,7 +10127,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 					{
 						if(GetConVarBool(cvarTellName))
 						{
-							new String:spcl[768];
+							char spcl[768];
 							KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
 							if(GetConVarInt(cvarAnnotations)==1)
 								CreateAttachedAnnotation(attacker, client, true, 5.0, "%t", "Telefrag Player", spcl);
@@ -11719,7 +11720,7 @@ GetClientQueuePoints(int client)
 		return botqueuepoints;
 	}
 
-	char cookies[24], String:cookieValues[8][5];
+	char cookies[24], cookieValues[8][5];
 	GetClientCookie(client, FF2Cookies, cookies, sizeof(cookies));
 	ExplodeString(cookies, " ", cookieValues, 8, 5);
 	return StringToInt(cookieValues[0]);
@@ -12703,7 +12704,7 @@ public Action Timer_DisplayCharsetVote(Handle timer)
 	Handle menu=CreateMenu(Handler_VoteCharset, MenuAction:MENU_ACTIONS_ALL);
 	SetMenuTitle(menu, "%t", "select_charset");
 
-	char config[PLATFORM_MAX_PATH], String:charset[64];
+	char config[PLATFORM_MAX_PATH], charset[64];
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s", DataPath, CharsetCFG);
 
 	Handle Kv=CreateKeyValues("");
