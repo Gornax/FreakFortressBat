@@ -3547,7 +3547,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 	EnableSubPlugins();
 	CheckArena();
 
-	bool omit[(MaxClients+1)];
+	new bool:omit[MaxClients+1];
 	Boss[0]=GetClientWithMostQueuePoints(omit);
 	omit[Boss[0]]=true;
 
@@ -4288,7 +4288,8 @@ public Action Timer_CalcQueuePoints(Handle timer)
 {
 	int damage, damage2;
 	botqueuepoints+=5;
-	bool add_points[(MaxClients+1)], add_points2[(MaxClients+1)];
+	new add_points[MaxClients+1];
+	new add_points2[MaxClients+1];
 	DebugMsg(0, "Queue points set");
 	for(int client=1; client<=MaxClients; client++)
 	{
@@ -5292,7 +5293,7 @@ public Action Timer_StartRound(Handle timer)
 public Action Timer_NextBossPanel(Handle timer)
 {
 	int clients;
-	bool added[(MaxClients+1)];
+	new bool:added[MaxClients+1];
 	while(clients<3)  //TODO: Make this configurable?
 	{
 		int client=GetClientWithMostQueuePoints(added);
@@ -6795,7 +6796,7 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	SetEntityRenderColor(client, 255, 255, 255, 255);
 	shield[client]=0;
 	int index=-1;
-	int civilianCheck[(MaxClients+1)];
+	new civilianCheck[MaxClients+1];
 
 	int weapon=GetPlayerWeaponSlot(client, 4);
 	if(IsValidEntity(weapon) && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==60  && (kvWeaponMods == null || GetConVarInt(cvarHardcodeWep)>0))  //Cloak and Dagger
@@ -6930,7 +6931,7 @@ stock RemovePlayerTarge(int client)
 	}
 }
 
-stock RemovePlayerBack(int client, char[] indices, int length)
+stock RemovePlayerBack(int client, const char[] indices, int length)
 {
 	if(length<=0)
 	{
@@ -7613,7 +7614,7 @@ public OnClientDisconnect(int client)
 		if(IsBoss(client) && !CheckRoundState() && GetConVarBool(cvarPreroundBossDisconnect))
 		{
 			int boss=GetBossIndex(client);
-			bool omit[(MaxClients+1)];
+			new bool:omit[MaxClients+1];
 			omit[client]=true;
 			Boss[boss]=GetClientWithMostQueuePoints(omit);
 
@@ -8414,7 +8415,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 					{
 						if(StringToInt(lives[j])==BossLives[boss])
 						{
-							char abilityName[64], String:pluginName[64];
+							char abilityName[64], pluginName[64];
 							KvGetString(BossKV[Special[boss]], "plugin_name", pluginName, sizeof(pluginName));
 							KvGetString(BossKV[Special[boss]], "name", abilityName, sizeof(abilityName));
 							if(!UseAbility(abilityName, pluginName, boss, 0))
