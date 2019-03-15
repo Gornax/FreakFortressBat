@@ -3547,7 +3547,7 @@ public Action:OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast
 	EnableSubPlugins();
 	CheckArena();
 
-	bool omit[MaxClients+1];
+	bool omit[(MaxClients+1)];
 	Boss[0]=GetClientWithMostQueuePoints(omit);
 	omit[Boss[0]]=true;
 
@@ -4288,7 +4288,7 @@ public Action Timer_CalcQueuePoints(Handle timer)
 {
 	int damage, damage2;
 	botqueuepoints+=5;
-	int add_points[MaxClients+1], add_points2[MaxClients+1];
+	bool add_points[(MaxClients+1)], add_points2[(MaxClients+1)];
 	DebugMsg(0, "Queue points set");
 	for(int client=1; client<=MaxClients; client++)
 	{
@@ -4669,9 +4669,10 @@ StopMusic(int client=0, bool permanent=false)
 	}
 }
 
-stock EmitSoundToAllExcept(char exceptiontype=SOUNDEXCEPT_MUSIC, const char[] sample, char entity=SOUND_FROM_PLAYER, char channel=SNDCHAN_AUTO, char level=SNDLEVEL_NORMAL, char flags=SND_NOFLAGS, float volume=SNDVOL_NORMAL, cvar pitch=SNDPITCH_NORMAL, int speakerentity=-1, const float origin[3]=NULL_VECTOR, const float dir[3]=NULL_VECTOR, bool updatePos=true, float soundtime=0.0)
+stock EmitSoundToAllExcept(char exceptiontype=SOUNDEXCEPT_MUSIC, const char[] sample, char entity=SOUND_FROM_PLAYER, char channel=SNDCHAN_AUTO, char level=SNDLEVEL_NORMAL, char flags=SND_NOFLAGS, float volume=SNDVOL_NORMAL, char pitch=SNDPITCH_NORMAL, int speakerentity=-1, const float origin[3]=NULL_VECTOR, const float dir[3]=NULL_VECTOR, bool updatePos=true, float soundtime=0.0)
 {
-	int clients[MaxClients], total;
+	new clients[(MaxClients)];
+	int total;
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && IsClientInGame(client))
@@ -5192,7 +5193,7 @@ public ConfirmBossH(Handle menu, MenuAction action, int param1, int param2)
 	return;
 }
 
-public Action FF2_OnSpecialSelected(int boss, int &SpecialNum, const char[] SpecialName, bool preset)
+public Action FF2_OnSpecialSelected(int boss, int &SpecialNum, char[] SpecialName, bool preset)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(preset)
@@ -5205,7 +5206,7 @@ public Action FF2_OnSpecialSelected(int boss, int &SpecialNum, const char[] Spec
 		return Plugin_Continue;
 	}
 	
-	if (!boss && !StrEqual(xIncoming[client], ""))
+	if(!boss && !StrEqual(xIncoming[client], ""))
 	{
 		strcopy(SpecialName, sizeof(xIncoming[]), xIncoming[client]);
 		if(!GetConVarBool(cvarKeepBoss) || !GetConVarBool(cvarSelectBoss) || IsFakeClient(client))
@@ -5291,7 +5292,7 @@ public Action Timer_StartRound(Handle timer)
 public Action Timer_NextBossPanel(Handle timer)
 {
 	int clients;
-	bool added[MaxClients+1];
+	bool added[(MaxClients+1)];
 	while(clients<3)  //TODO: Make this configurable?
 	{
 		int client=GetClientWithMostQueuePoints(added);
@@ -5876,7 +5877,7 @@ stock SetEntityTeamNum(int iEnt, int iTeam)
 	SetEntProp(iEnt, Prop_Send, "m_iTeamNum", iTeam);
 }
 
-public Action TF2Items_OnGiveNamedItem(int client, char classname[], int iItemDefinitionIndex, Handle &item)
+public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDefinitionIndex, Handle &item)
 {
 	if(!Enabled)
 	{
@@ -6794,7 +6795,7 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	SetEntityRenderColor(client, 255, 255, 255, 255);
 	shield[client]=0;
 	int index=-1;
-	int civilianCheck[MaxClients+1];
+	int civilianCheck[(MaxClients+1)];
 
 	int weapon=GetPlayerWeaponSlot(client, 4);
 	if(IsValidEntity(weapon) && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==60  && (kvWeaponMods == null || GetConVarInt(cvarHardcodeWep)>0))  //Cloak and Dagger
@@ -6929,7 +6930,7 @@ stock RemovePlayerTarge(int client)
 	}
 }
 
-stock RemovePlayerBack(int client, char indices[], int length)
+stock RemovePlayerBack(int client, char[] indices, int length)
 {
 	if(length<=0)
 	{
@@ -6972,7 +6973,7 @@ stock FindPlayerBack(int client, int index)
 	return -1;
 }
 
-public Action OnObjectDestroyed(Handle event, const char name[], bool dontBroadcast)
+public Action OnObjectDestroyed(Handle event, const char[] name, bool dontBroadcast)
 {
 	if(Enabled)
 	{
@@ -6991,7 +6992,7 @@ public Action OnObjectDestroyed(Handle event, const char name[], bool dontBroadc
 	return Plugin_Continue;
 }
 
-public Action OnUberDeployed(Handle event, const char name[], bool dontBroadcast)
+public Action OnUberDeployed(Handle event, const char[] name, bool dontBroadcast)
 {
 	int client=GetClientOfUserId(GetEventInt(event, "userid"));
 	if(Enabled && IsValidClient(client) && IsPlayerAlive(client))
@@ -7612,7 +7613,7 @@ public OnClientDisconnect(int client)
 		if(IsBoss(client) && !CheckRoundState() && GetConVarBool(cvarPreroundBossDisconnect))
 		{
 			int boss=GetBossIndex(client);
-			bool omit[MaxClients+1];
+			bool omit[(MaxClients+1)];
 			omit[client]=true;
 			Boss[boss]=GetClientWithMostQueuePoints(omit);
 
@@ -8398,7 +8399,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 				KvGetString(BossKV[Special[boss]], "life", ability, sizeof(ability));
 				if(!ability[0])
 				{
-					char abilityName[64], String:pluginName[64];
+					char abilityName[64], pluginName[64];
 					KvGetString(BossKV[Special[boss]], "plugin_name", pluginName, sizeof(pluginName));
 					KvGetString(BossKV[Special[boss]], "name", abilityName, sizeof(abilityName));
 					if(!UseAbility(abilityName, pluginName, boss, 0))
@@ -11531,7 +11532,7 @@ public Action QueuePanelCmd(int client, int args)
 
 	char text[64];
 	int items;
-	bool added[MaxClients+1];
+	bool added[(MaxClients+1)];
 
 	Handle panel=CreatePanel();
 	Format(text, sizeof(text), "%T", "thequeue", client);  //"Boss Queue"
