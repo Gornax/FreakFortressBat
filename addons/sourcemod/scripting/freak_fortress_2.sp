@@ -10088,7 +10088,7 @@ public Action OnTakeDamage(int client, &attacker, &inflictor, &float damage, &da
 					}
 					damage=(BossHealth[boss]>9001 ? 9001.0 : float(GetEntProp(Boss[boss], Prop_Send, "m_iHealth"))+90.0);
 
-					for(new all; all<=MaxClients; all++)
+					for(int all; all<=MaxClients; all++)
 					{
 						if(IsValidClient(all) && IsPlayerAlive(all))
 						{
@@ -10104,7 +10104,7 @@ public Action OnTakeDamage(int client, &attacker, &inflictor, &float damage, &da
 						}
 					}
 
-					new teleowner=FindTeleOwner(attacker);
+					int teleowner=FindTeleOwner(attacker);
 					if(IsValidClient(teleowner) && teleowner!=attacker)
 					{
 						Damage[teleowner]+=9001*3/5;
@@ -10165,7 +10165,7 @@ public Action OnTakeDamage(int client, &attacker, &inflictor, &float damage, &da
 						}
 					}
 
-					decl String:sound[PLATFORM_MAX_PATH];
+					char sound[PLATFORM_MAX_PATH];
 					if(RandomSound("sound_telefraged", sound, sizeof(sound)))
 					{
 						EmitSoundToAllExcept(SOUNDEXCEPT_VOICE, sound, _, _, _, _, _, _, _, _, _, false);
@@ -10177,14 +10177,14 @@ public Action OnTakeDamage(int client, &attacker, &inflictor, &float damage, &da
 			}
 			else
 			{
-				decl String:classname[64];
+				char classname[64];
 				if(GetEntityClassname(attacker, classname, sizeof(classname)) && !strcmp(classname, "trigger_hurt", false))
 				{
-					new Action:action=Plugin_Continue;
+					Action action=Plugin_Continue;
 					Call_StartForward(OnTriggerHurt);
 					Call_PushCell(boss);
 					Call_PushCell(attacker);
-					new Float:damage2=damage;
+					float damage2=damage;
 					Call_PushFloatRef(damage2);
 					Call_Finish(action);
 					if(action!=Plugin_Stop && action!=Plugin_Handled)
@@ -10226,26 +10226,11 @@ public Action OnTakeDamage(int client, &attacker, &inflictor, &float damage, &da
 		}
 		else
 		{
-			//new index=(IsValidEntity(weapon) && weapon>MaxClients && attacker<=MaxClients ? GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") : -1);
-			//if(index==307)  //Ullapool Caber
-			//{
-				//if(detonations[attacker]<allowedDetonations)
-				//{
-					//detonations[attacker]++;
-					//PrintHintText(attacker, "%t", "Detonations Left", allowedDetonations-detonations[attacker]);
-					//if(allowedDetonations-detonations[attacker])  //Don't reset their caber if they have 0 detonations left
-					//{
-						//SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
-						//SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
-					//}
-				//}
-			//}
-
 			if(IsValidClient(client, false) && TF2_GetPlayerClass(client)==TFClass_Soldier)  //TODO: LOOK AT THIS
 			{
 				if(damagetype & DMG_FALL)
 				{
-					new secondary=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
+					int secondary=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
 					if(secondary<=0 || !IsValidEntity(secondary))
 					{
 						damage/=10.0;
@@ -10258,7 +10243,7 @@ public Action OnTakeDamage(int client, &attacker, &inflictor, &float damage, &da
 	return Plugin_Continue;
 }
 
-public Action:TF2_OnPlayerTeleport(client, teleporter, &bool:result)
+public Action TF2_OnPlayerTeleport(int client, int teleporter, &bool result)
 {
 	if(Enabled && IsBoss(client))
 	{
@@ -10278,7 +10263,7 @@ public Action:TF2_OnPlayerTeleport(client, teleporter, &bool:result)
 	return Plugin_Continue;
 }
 
-public Action:OnStomp(attacker, victim, &Float:damageMultiplier, &Float:damageBonus, &Float:JumpPower)
+public Action OnStomp(int attacker, int victim, &float damageMultiplier, &float damageBonus, &float JumpPower)
 {
 	if(!Enabled || !IsValidClient(attacker) || !IsValidClient(victim) || attacker==victim)
 	{
@@ -10287,10 +10272,10 @@ public Action:OnStomp(attacker, victim, &Float:damageMultiplier, &Float:damageBo
 
 	if(IsBoss(attacker))
 	{
-		new boss=GetBossIndex(attacker);
+		int boss=GetBossIndex(attacker);
 		if(shield[victim])
 		{
-			new Float:position[3];
+			float position[3];
 			GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
 			RemoveShield(victim, attacker, position);
 			return Plugin_Handled;
@@ -10322,7 +10307,7 @@ public Action:OnStomp(attacker, victim, &Float:damageMultiplier, &Float:damageBo
 		{
 			if(GetConVarBool(cvarTellName))
 			{
-				new String:spcl[768];
+				char spcl[768];
 				KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
 				if(GetConVarInt(cvarAnnotations)==1)
 					CreateAttachedAnnotation(victim, attacker, true, 5.0, "%t", "Goomba Stomped Player", spcl);
@@ -10346,14 +10331,14 @@ public Action:OnStomp(attacker, victim, &Float:damageMultiplier, &Float:damageBo
 	}
 	else if(IsBoss(victim))
 	{
-		new boss=GetBossIndex(victim);
+		int boss=GetBossIndex(victim);
 		damageMultiplier=GoombaDamage;
 		JumpPower=reboundPower;
 		if(!(FF2flags[attacker] & FF2FLAG_HUDDISABLED))
 		{
 			if(GetConVarBool(cvarTellName))
 			{
-				new String:spcl[768];
+				char spcl[768];
 				KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
 				if(GetConVarInt(cvarAnnotations)==1)
 					CreateAttachedAnnotation(attacker, victim, true, 5.0, "%t", "Goomba Stomp Player", spcl);
@@ -10399,7 +10384,7 @@ public Action:OnStomp(attacker, victim, &Float:damageMultiplier, &Float:damageBo
 	return Plugin_Continue;
 }
 
-public OnStompPost(attacker, victim, Float:damageMultiplier, Float:damageBonus, Float:jumpPower)
+public OnStompPost(int attacker, int victim, float damageMultiplier, float damageBonus, float jumpPower)
 {
 	if(Enabled && IsBoss(victim))
 	{
@@ -10407,7 +10392,7 @@ public OnStompPost(attacker, victim, Float:damageMultiplier, Float:damageBonus, 
 	}
 }
 
-public Action:RTD_CanRollDice(client)
+public Action RTD_CanRollDice(int client)
 {
 	if(Enabled && IsBoss(client) && !canBossRTD)
 	{
@@ -10427,11 +10412,11 @@ public Action RTD2_CanRollDice(int client)
 	return Plugin_Continue;
 }
 
-public Action:OnGetMaxHealth(client, &maxHealth)
+public Action OnGetMaxHealth(int client, &int maxHealth)
 {
 	if(Enabled && IsBoss(client))
 	{
-		new boss=GetBossIndex(client);
+		int boss=GetBossIndex(client);
 		SetEntityHealth(client, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1));
 		maxHealth=BossHealthMax[boss];
 		return Plugin_Changed;
@@ -10439,20 +10424,20 @@ public Action:OnGetMaxHealth(client, &maxHealth)
 	return Plugin_Continue;
 }
 
-stock GetClientCloakIndex(client)
+stock GetClientCloakIndex(int client)
 {
 	if(!IsValidClient(client, false))
 	{
 		return -1;
 	}
 
-	new weapon=GetPlayerWeaponSlot(client, 4);
+	int weapon=GetPlayerWeaponSlot(client, 4);
 	if(!IsValidEntity(weapon))
 	{
 		return -1;
 	}
 
-	decl String:classname[64];
+	char classname[64];
 	GetEntityClassname(weapon, classname, sizeof(classname));
 	if(strncmp(classname, "tf_wea", 6, false))
 	{
@@ -10461,14 +10446,14 @@ stock GetClientCloakIndex(client)
 	return GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
 }
 
-stock SpawnSmallHealthPackAt(client, team=0, attacker)
+stock SpawnSmallHealthPackAt(int client, int team=0, int attacker)
 {
 	if(!IsValidClient(client, false) || !IsPlayerAlive(client))
 	{
 		return;
 	}
 
-	new healthpack=CreateEntityByName("item_healthkit_small"), Float:position[3];
+	int healthpack=CreateEntityByName("item_healthkit_small"), Float:position[3];
 	GetClientAbsOrigin(client, position);
 	position[2]+=20.0;
 	if(IsValidEntity(healthpack))
@@ -10477,7 +10462,7 @@ stock SpawnSmallHealthPackAt(client, team=0, attacker)
 		DispatchSpawn(healthpack);
 		SetEntProp(healthpack, Prop_Send, "m_iTeamNum", team, 4);
 		SetEntityMoveType(healthpack, MOVETYPE_VPHYSICS);
-		new Float:velocity[3];//={float(GetRandomInt(-10, 10)), float(GetRandomInt(-10, 10)), 50.0};  //Q_Q
+		float velocity[3];//={float(GetRandomInt(-10, 10)), float(GetRandomInt(-10, 10)), 50.0};  //Q_Q
 		velocity[0]=float(GetRandomInt(-10, 10)), velocity[1]=float(GetRandomInt(-10, 10)), velocity[2]=50.0;  //I did this because setting it on the creation of the vel variable was creating a compiler error for me.
 		TeleportEntity(healthpack, position, NULL_VECTOR, velocity);
 		SetEntPropEnt(healthpack, Prop_Send, "m_hOwnerEntity", attacker);
@@ -10485,33 +10470,33 @@ stock SpawnSmallHealthPackAt(client, team=0, attacker)
 	}
 }
 
-stock IncrementHeadCount(client)
+stock IncrementHeadCount(int client)
 {
 	if(!TF2_IsPlayerInCondition(client, TFCond_DemoBuff))
 	{
 		TF2_AddCondition(client, TFCond_DemoBuff, -1.0);
 	}
 
-	new decapitations=GetEntProp(client, Prop_Send, "m_iDecapitations");
-	new health=GetClientHealth(client);
+	int decapitations=GetEntProp(client, Prop_Send, "m_iDecapitations");
+	int health=GetClientHealth(client);
 	SetEntProp(client, Prop_Send, "m_iDecapitations", decapitations+1);
 	SetEntityHealth(client, health+15);
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.01);
 	DebugMsg(0, "Increased head count");
 }
 
-stock FindTeleOwner(client)
+stock FindTeleOwner(int client)
 {
 	if(!IsValidClient(client) || !IsPlayerAlive(client))
 	{
 		return -1;
 	}
 
-	new teleporter=GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
-	decl String:classname[32];
+	int teleporter=GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
+	char classname[32];
 	if(IsValidEntity(teleporter) && GetEntityClassname(teleporter, classname, sizeof(classname)) && !strcmp(classname, "obj_teleporter", false))
 	{
-		new owner=GetEntPropEnt(teleporter, Prop_Send, "m_hBuilder");
+		int owner=GetEntPropEnt(teleporter, Prop_Send, "m_hBuilder");
 		if(IsValidClient(owner, false))
 		{
 			return owner;
@@ -10520,14 +10505,14 @@ stock FindTeleOwner(client)
 	return -1;
 }
 
-stock TF2_IsPlayerCritBuffed(client)
+stock TF2_IsPlayerCritBuffed(int client)
 {
 	return (TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) || TF2_IsPlayerInCondition(client, TFCond_HalloweenCritCandy) || TF2_IsPlayerInCondition(client, TFCond:34) || TF2_IsPlayerInCondition(client, TFCond:35) || TF2_IsPlayerInCondition(client, TFCond_CritOnFirstBlood) || TF2_IsPlayerInCondition(client, TFCond_CritOnWin) || TF2_IsPlayerInCondition(client, TFCond_CritOnFlagCapture) || TF2_IsPlayerInCondition(client, TFCond_CritOnKill) || TF2_IsPlayerInCondition(client, TFCond_CritMmmph));
 }
 
-public Action:Timer_DisguiseBackstab(Handle:timer, any:userid)
+public Action Timer_DisguiseBackstab(Handle timer, any userid)
 {
-	new client=GetClientOfUserId(userid);
+	int client=GetClientOfUserId(userid);
 	if(IsValidClient(client, false))
 	{
 		RandomlyDisguise(client);
@@ -10536,7 +10521,7 @@ public Action:Timer_DisguiseBackstab(Handle:timer, any:userid)
 	return Plugin_Continue;
 }
 
-stock AssignTeam(client, team)
+stock AssignTeam(int client, int team)
 {
 	if(!GetEntProp(client, Prop_Send, "m_iDesiredPlayerClass"))  //Living spectator check: 0 means that no class is selected
 	{
@@ -10571,15 +10556,15 @@ stock AssignTeam(client, team)
 	}
 }
 
-stock RandomlyDisguise(client)	//Original code was mecha's, but the original code is broken and this uses a better method now.
+stock RandomlyDisguise(int client)	//Original code was mecha's, but the original code is broken and this uses a better method now.
 {
 	if(IsValidClient(client) && IsPlayerAlive(client))
 	{
-		new disguiseTarget=-1;
-		new team=GetClientTeam(client);
+		int disguiseTarget=-1;
+		int team=GetClientTeam(client);
 
-		new Handle:disguiseArray=CreateArray();
-		for(new clientcheck; clientcheck<=MaxClients; clientcheck++)
+		Handle disguiseArray=CreateArray();
+		for(int clientcheck; clientcheck<=MaxClients; clientcheck++)
 		{
 			if(IsValidClient(clientcheck) && GetClientTeam(clientcheck)==team && clientcheck!=client)
 			{
@@ -10600,8 +10585,8 @@ stock RandomlyDisguise(client)	//Original code was mecha's, but the original cod
 			}
 		}
 
-		new class=GetRandomInt(0, 4);
-		new TFClassType:classArray[]={TFClass_Scout, TFClass_Pyro, TFClass_Medic, TFClass_Engineer, TFClass_Sniper};
+		int class=GetRandomInt(0, 4);
+		TFClassType classArray[]={TFClass_Scout, TFClass_Pyro, TFClass_Medic, TFClass_Engineer, TFClass_Sniper};
 		CloseHandle(disguiseArray);
 
 		if(TF2_GetPlayerClass(client)==TFClass_Spy)
@@ -10619,7 +10604,7 @@ stock RandomlyDisguise(client)	//Original code was mecha's, but the original cod
 	}
 }
 
-public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, &bool result)
 {
 	if(Enabled && IsBoss(client) && CheckRoundState()==1 && !TF2_IsPlayerCritBuffed(client) && !randomCrits[client])
 	{
@@ -10637,13 +10622,13 @@ public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &boo
 	return Plugin_Continue;
 }
 
-public SickleClimbWalls(client, weapon)	 //Credit to Mecha the Slag
+public SickleClimbWalls(int client, int weapon)	 //Credit to Mecha the Slag
 {
 	if (!IsValidClient(client) || (GetClientHealth(client)<=SniperClimbDamage) )return;
 
-	new String:classname[64];
-	new Float:vecClientEyePos[3];
-	new Float:vecClientEyeAng[3];
+	char classname[64];
+	float vecClientEyePos[3];
+	float vecClientEyeAng[3];
 	GetClientEyePosition(client, vecClientEyePos);   // Get the position of the player's eyes
 	GetClientEyeAngles(client, vecClientEyeAng);	   // Get the angle the player is looking
 
@@ -10652,24 +10637,24 @@ public SickleClimbWalls(client, weapon)	 //Credit to Mecha the Slag
 
 	if (!TR_DidHit(INVALID_HANDLE)) return;
 
-	new TRIndex = TR_GetEntityIndex(INVALID_HANDLE);
+	int TRIndex = TR_GetEntityIndex(INVALID_HANDLE);
 	GetEdictClassname(TRIndex, classname, sizeof(classname));
 	if (!StrEqual(classname, "worldspawn")) return;
 
-	new Float:fNormal[3];
+	float fNormal[3];
 	TR_GetPlaneNormal(INVALID_HANDLE, fNormal);
 	GetVectorAngles(fNormal, fNormal);
 
 	if (fNormal[0] >= 30.0 && fNormal[0] <= 330.0) return;
 	if (fNormal[0] <= -30.0) return;
 
-	new Float:pos[3];
+	float pos[3];
 	TR_GetEndPosition(pos);
-	new Float:distance = GetVectorDistance(vecClientEyePos, pos);
+	float distance = GetVectorDistance(vecClientEyePos, pos);
 
 	if (distance >= 100.0) return;
 
-	new Float:fVelocity[3];
+	float fVelocity[3];
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVelocity);
 
 	fVelocity[2] = 600.0;
@@ -10684,30 +10669,30 @@ public SickleClimbWalls(client, weapon)	 //Credit to Mecha the Slag
 	// CreateTimer(0.0, Timer_NoAttacking, EntIndexToEntRef(weapon), TIMER_FLAG_NO_MAPCHANGE);
 }
 
-stock SetNextAttack(weapon, Float:duration = 0.0)
+stock SetNextAttack(int weapon, float duration = 0.0)
 {
 	if (weapon <= MaxClients) return;
 	if (!IsValidEntity(weapon)) return;
-	new Float:next = GetGameTime() + duration;
+	float next = GetGameTime() + duration;
 	SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", next);
 	SetEntPropFloat(weapon, Prop_Send, "m_flNextSecondaryAttack", next);
 }
 
-public bool:TraceRayDontHitSelf(entity, mask, any:data)
+public bool TraceRayDontHitSelf(int entity, int mask, any data)
 {
 	return (entity != data);
 }
 
-public Timer_NoAttacking(any:ref) // Action: Handle:timer, 
+public Timer_NoAttacking(any ref) 
 {
-	new weapon = EntRefToEntIndex(ref);
+	int weapon = EntRefToEntIndex(ref);
 	SetNextAttack(weapon, SniperClimbDelay);
 }
 
-stock GetClientWithMostQueuePoints(bool:omit[])
+stock GetClientWithMostQueuePoints(bool omit[])
 {
-	new winner;
-	for(new client=1; client<=MaxClients; client++)
+	int winner;
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && GetClientQueuePoints(client)>=GetClientQueuePoints(winner) && !omit[client])
 		{
@@ -10723,7 +10708,7 @@ stock GetClientWithMostQueuePoints(bool:omit[])
 	
 	if(!winner)
 	{
-		for(new client=1; client<MaxClients; client++)
+		for(int client=1; client<MaxClients; client++)
 		{
 			if(IsValidClient(client) && !omit[client])
 			{
@@ -10737,10 +10722,10 @@ stock GetClientWithMostQueuePoints(bool:omit[])
 	return winner;
 }
 
-stock GetRandomValidClient(bool:omit[])
+stock GetRandomValidClient(bool omit[])
 {
-	new companion;
-	for(new client=1; client<=MaxClients; client++)
+	int companion;
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && !omit[client] && (GetClientQueuePoints(client)>=GetClientQueuePoints(companion) || GetConVarBool(cvarDuoRandom)))
 		{
@@ -10756,7 +10741,7 @@ stock GetRandomValidClient(bool:omit[])
 	
 	if(!companion)
 	{
-		for(new client=1; client<MaxClients; client++)
+		for(int client=1; client<MaxClients; client++)
 		{
 			if(IsValidClient(client) && !omit[client]) //&& (GetClientQueuePoints(client)>=GetClientQueuePoints(companion) || GetConVarBool(cvarDuoRandom)))
 			{
@@ -10772,7 +10757,7 @@ stock GetRandomValidClient(bool:omit[])
 
 stock LastBossIndex()
 {
-	for(new client=1; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(!Boss[client])
 		{
@@ -10782,11 +10767,11 @@ stock LastBossIndex()
 	return 0;
 }
 
-stock GetBossIndex(client)
+stock GetBossIndex(int client)
 {
 	if(client>0 && client<=MaxClients)
 	{
-		for(new boss; boss<=MaxClients; boss++)
+		for(int boss; boss<=MaxClients; boss++)
 		{
 			if(Boss[boss]==client)
 			{
@@ -10797,9 +10782,9 @@ stock GetBossIndex(client)
 	return -1;
 }
 
-stock Operate(Handle:sumArray, &bracket, Float:value, Handle:_operator)
+stock Operate(Handle sumArray, &int bracket, float value, Handle _operator)
 {
-	new Float:sum=GetArrayCell(sumArray, bracket);
+	float sum=GetArrayCell(sumArray, bracket);
 	switch(GetArrayCell(_operator, bracket))
 	{
 		case Operator_Add:
@@ -10836,7 +10821,7 @@ stock Operate(Handle:sumArray, &bracket, Float:value, Handle:_operator)
 	SetArrayCell(_operator, bracket, Operator_None);
 }
 
-stock OperateString(Handle:sumArray, &bracket, String:value[], size, Handle:_operator)
+stock OperateString(Handle sumArray, &int bracket, char[] value, int size, Handle _operator)
 {
 	if(!StrEqual(value, ""))  //Make sure 'value' isn't blank
 	{
@@ -10845,17 +10830,17 @@ stock OperateString(Handle:sumArray, &bracket, String:value[], size, Handle:_ope
 	}
 }
 
-stock ParseFormula(boss, const String:key[], const String:defaultFormula[], defaultValue)
+stock ParseFormula(int boss, const char[] key, const char[] defaultFormula, int defaultValue)
 {
-	decl String:formula[1024], String:bossName[64];
+	char formula[1024], bossName[64];
 	KvRewind(BossKV[Special[boss]]);
 	KvGetString(BossKV[Special[boss]], "name", bossName, sizeof(bossName), "=Failed name=");
 	KvGetString(BossKV[Special[boss]], key, formula, sizeof(formula), defaultFormula);
 
-	new playing2=playing + 1;
-	new size=1;
-	new matchingBrackets;
-	for(new i; i<=strlen(formula); i++)  //Resize the arrays once so we don't have to worry about it later on
+	int playing2=playing + 1;
+	int size=1;
+	int matchingBrackets;
+	for(int i; i<=strlen(formula); i++)  //Resize the arrays once so we don't have to worry about it later on
 	{
 		if(formula[i]=='(')
 		{
@@ -10874,13 +10859,13 @@ stock ParseFormula(boss, const String:key[], const String:defaultFormula[], defa
 		}
 	}
 
-	new Handle:sumArray=CreateArray(_, size), Handle:_operator=CreateArray(_, size);
-	new bracket;  //Each bracket denotes a separate sum (within parentheses).  At the end, they're all added together to achieve the actual sum
+	Handle sumArray=CreateArray(_, size), Handle:_operator=CreateArray(_, size);
+	int bracket;  //Each bracket denotes a separate sum (within parentheses).  At the end, they're all added together to achieve the actual sum
 	SetArrayCell(sumArray, 0, 0.0);  //TODO:  See if these can be placed naturally in the loop
 	SetArrayCell(_operator, bracket, Operator_None);
 
-	new String:character[2], String:value[16];  //We don't decl value because we directly append characters to it and there's no point in decl'ing character
-	for(new i; i<=strlen(formula); i++)
+	char character[2], value[16];  //We don't decl value because we directly append characters to it and there's no point in decl'ing character
+	for(int i; i<=strlen(formula); i++)
 	{
 		character[0]=formula[i];  //Find out what the next char in the formula is
 		switch(character[0])
@@ -10958,7 +10943,7 @@ stock ParseFormula(boss, const String:key[], const String:defaultFormula[], defa
 		}
 	}
 
-	new result=RoundFloat(GetArrayCell(sumArray, 0));
+	int result=RoundFloat(GetArrayCell(sumArray, 0));
 	CloseHandle(sumArray);
 	CloseHandle(_operator);
 	if(result<=0)
@@ -10976,25 +10961,25 @@ stock ParseFormula(boss, const String:key[], const String:defaultFormula[], defa
 	return result;
 }
 
-stock GetAbilityArgument(index,const String:plugin_name[],const String:ability_name[],arg,defvalue=0)
+stock GetAbilityArgument(int index, const char[] plugin_name, const char[] ability_name, int arg, int defvalue=0)
 {
 	if(index==-1 || Special[index]==-1 || !BossKV[Special[index]])
 		return 0;
 	KvRewind(BossKV[Special[index]]);
-	decl String:s[10];
-	for(new i=1; i<MAXRANDOMS; i++)
+	char s[10];
+	for(int i=1; i<MAXRANDOMS; i++)
 	{
 		Format(s,10,"ability%i",i);
 		if(KvJumpToKey(BossKV[Special[index]],s))
 		{
-			decl String:ability_name2[64];
+			char ability_name2[64];
 			KvGetString(BossKV[Special[index]], "name",ability_name2,64);
 			if(strcmp(ability_name,ability_name2))
 			{
 				KvGoBack(BossKV[Special[index]]);
 				continue;
 			}
-			decl String:plugin_name2[64];
+			char plugin_name2[64];
 			KvGetString(BossKV[Special[index]], "plugin_name",plugin_name2,64);
 			if(plugin_name[0] && plugin_name2[0] && strcmp(plugin_name,plugin_name2))
 			{
@@ -11008,25 +10993,25 @@ stock GetAbilityArgument(index,const String:plugin_name[],const String:ability_n
 	return 0;
 }
 
-stock Float:GetAbilityArgumentFloat(index,const String:plugin_name[],const String:ability_name[],arg,Float:defvalue=0.0)
+stock Float GetAbilityArgumentFloat(int index, const char[] plugin_name, const char[] ability_name, int arg, float defvalue=0.0)
 {
 	if(index==-1 || Special[index]==-1 || !BossKV[Special[index]])
 		return 0.0;
 	KvRewind(BossKV[Special[index]]);
-	decl String:s[10];
-	for(new i=1; i<MAXRANDOMS; i++)
+	char s[10];
+	for(int i=1; i<MAXRANDOMS; i++)
 	{
 		Format(s,10,"ability%i",i);
 		if(KvJumpToKey(BossKV[Special[index]],s))
 		{
-			decl String:ability_name2[64];
+			char ability_name2[64];
 			KvGetString(BossKV[Special[index]], "name",ability_name2,64);
 			if(strcmp(ability_name,ability_name2))
 			{
 				KvGoBack(BossKV[Special[index]]);
 				continue;
 			}
-			decl String:plugin_name2[64];
+			char plugin_name2[64];
 			KvGetString(BossKV[Special[index]], "plugin_name",plugin_name2,64);
 			if(plugin_name[0] && plugin_name2[0] && strcmp(plugin_name,plugin_name2))
 			{
@@ -11034,14 +11019,14 @@ stock Float:GetAbilityArgumentFloat(index,const String:plugin_name[],const Strin
 				continue;
 			}
 			Format(s,10,"arg%i",arg);
-			new Float:see=KvGetFloat(BossKV[Special[index]], s,defvalue);
+			float see=KvGetFloat(BossKV[Special[index]], s,defvalue);
 			return see;
 		}
 	}
 	return 0.0;
 }
 
-stock GetAbilityArgumentString(index,const String:plugin_name[],const String:ability_name[],arg,String:buffer[],buflen,const String:defvalue[]="")
+stock GetAbilityArgumentString(int index, const char[] plugin_name, const char[] ability_name, int arg, char[] buffer, buflen, const char[] defvalue="")
 {
 	if(index==-1 || Special[index]==-1 || !BossKV[Special[index]])
 	{
@@ -11049,20 +11034,20 @@ stock GetAbilityArgumentString(index,const String:plugin_name[],const String:abi
 		return;
 	}
 	KvRewind(BossKV[Special[index]]);
-	decl String:s[10];
-	for(new i=1; i<MAXRANDOMS; i++)
+	char s[10];
+	for(int i=1; i<MAXRANDOMS; i++)
 	{
 		Format(s,10,"ability%i",i);
 		if(KvJumpToKey(BossKV[Special[index]],s))
 		{
-			decl String:ability_name2[64];
+			char ability_name2[64];
 			KvGetString(BossKV[Special[index]], "name",ability_name2,64);
 			if(strcmp(ability_name,ability_name2))
 			{
 				KvGoBack(BossKV[Special[index]]);
 				continue;
 			}
-			decl String:plugin_name2[64];
+			char plugin_name2[64];
 			KvGetString(BossKV[Special[index]], "plugin_name",plugin_name2,64);
 			if(plugin_name[0] && plugin_name2[0] && strcmp(plugin_name,plugin_name2))
 			{
@@ -11075,7 +11060,7 @@ stock GetAbilityArgumentString(index,const String:plugin_name[],const String:abi
 	}
 }
 
-stock bool:RandomSound(const String:sound[], String:file[], length, boss=0)
+stock bool RandomSound(const char[] sound, char[] file, int length, int boss=0)
 {
 	if(boss<0 || Special[boss]<0 || !BossKV[Special[boss]])
 	{
@@ -11089,8 +11074,8 @@ stock bool:RandomSound(const String:sound[], String:file[], length, boss=0)
 		return false;  //Requested sound not implemented for this boss
 	}
 
-	decl String:key[4];
-	new sounds;
+	char key[4];
+	int sounds;
 	while(++sounds)  //Just keep looping until there's no keys left
 	{
 		IntToString(sounds, key, sizeof(key));
@@ -11112,7 +11097,7 @@ stock bool:RandomSound(const String:sound[], String:file[], length, boss=0)
 	return true;
 }
 
-stock bool:RandomSoundAbility(const String:sound[], String:file[], length, boss=0, slot=0)
+stock bool RandomSoundAbility(const char[] sound, char[] file[], int length, int boss=0, int slot=0)
 {
 	if(boss<0 || Special[boss]<0 || !BossKV[Special[boss]])
 	{
@@ -11125,8 +11110,8 @@ stock bool:RandomSoundAbility(const String:sound[], String:file[], length, boss=
 		return false;  //Sound doesn't exist
 	}
 
-	decl String:key[10];
-	new sounds, matches, match[MAXRANDOMS];
+	char key[10];
+	int sounds, matches, match[MAXRANDOMS];
 	while(++sounds)
 	{
 		IntToString(sounds, key, 4);
@@ -11154,9 +11139,9 @@ stock bool:RandomSoundAbility(const String:sound[], String:file[], length, boss=
 	return true;
 }
 
-ForceTeamWin(team)
+ForceTeamWin(int team)
 {
-	new entity=FindEntityByClassname2(-1, "team_control_point_master");
+	int entity=FindEntityByClassname2(-1, "team_control_point_master");
 	if(!IsValidEntity(entity))
 	{
 		entity=CreateEntityByName("team_control_point_master");
@@ -11167,7 +11152,7 @@ ForceTeamWin(team)
 	AcceptEntityInput(entity, "SetWinner");
 }
 
-public bool:PickCharacter(boss, companion)
+public bool PickCharacter(int boss, int companion)
 {
 	if(boss==companion)
 	{
@@ -11175,12 +11160,12 @@ public bool:PickCharacter(boss, companion)
 		Incoming[boss]=-1;
 		if(Special[boss]!=-1)  //We've already picked a boss through Command_SetNextBoss
 		{
-			new Action:action;
+			Action action;
 			Call_StartForward(OnSpecialSelected);
 			Call_PushCell(boss);
-			new characterIndex=Special[boss];
+			int characterIndex=Special[boss];
 			Call_PushCellRef(characterIndex);
-			decl String:newName[64];
+			char newName[64];
 			KvRewind(BossKV[Special[boss]]);
 			KvGetString(BossKV[Special[boss]], "name", newName, sizeof(newName));
 			Call_PushStringEx(newName, sizeof(newName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
@@ -11190,9 +11175,9 @@ public bool:PickCharacter(boss, companion)
 			{
 				if(newName[0])
 				{
-					decl String:characterName[64];
-					new foundExactMatch=-1, foundPartialMatch=-1;
-					for(new character; BossKV[character] && character<MAXSPECIALS; character++)
+					char characterName[64];
+					int foundExactMatch=-1, foundPartialMatch=-1;
+					for(int character; BossKV[character] && character<MAXSPECIALS; character++)
 					{
 						KvRewind(BossKV[character]);
 						KvGetString(BossKV[character], "name", characterName, sizeof(characterName));
@@ -11242,12 +11227,12 @@ public bool:PickCharacter(boss, companion)
 			return true;
 		}
 		
-		for(new tries; tries<100; tries++)
+		for(int tries; tries<100; tries++)
 		{
 			if(ChancesString[0])
 			{
-				new characterIndex=chancesIndex;  //Don't touch chancesIndex since it doesn't get reset
-				new i=GetRandomInt(0, chances[characterIndex-1]);
+				int characterIndex=chancesIndex;  //Don't touch chancesIndex since it doesn't get reset
+				int i=GetRandomInt(0, chances[characterIndex-1]);
 
 				while(characterIndex>=2 && i<chances[characterIndex-1])
 				{
@@ -11260,7 +11245,7 @@ public bool:PickCharacter(boss, companion)
 				Special[boss]=GetRandomInt(0, Specials-1);
 			}
 
-			decl String:companionName[64];
+			char companionName[64];
 			KvRewind(BossKV[Special[boss]]);
 			KvGetString(BossKV[Special[boss]], "companion", companionName, sizeof(companionName));
 			if(KvGetNum(BossKV[Special[boss]], "blocked") ||
@@ -11278,11 +11263,11 @@ public bool:PickCharacter(boss, companion)
 	}
 	else
 	{
-		decl String:bossName[64], String:companionName[64];
+		char bossName[64], companionName[64];
 		KvRewind(BossKV[Special[boss]]);
 		KvGetString(BossKV[Special[boss]], "companion", companionName, sizeof(companionName), "=Failed companion name=");
 
-		new character;
+		int character;
 		while(character<Specials)  //Loop through all the bosses to find the companion we're looking for
 		{
 			KvRewind(BossKV[character]);
@@ -11309,12 +11294,12 @@ public bool:PickCharacter(boss, companion)
 	}
 
 	//All of the following uses `companion` because it will always be the boss index we want
-	new Action:action;
+	Action action;
 	Call_StartForward(OnSpecialSelected);
 	Call_PushCell(companion);
-	new characterIndex=Special[companion];
+	int characterIndex=Special[companion];
 	Call_PushCellRef(characterIndex);
-	decl String:newName[64];
+	char newName[64];
 	KvRewind(BossKV[Special[companion]]);
 	KvGetString(BossKV[Special[companion]], "name", newName, sizeof(newName));
 	Call_PushStringEx(newName, sizeof(newName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
@@ -11324,8 +11309,8 @@ public bool:PickCharacter(boss, companion)
 	{
 		if(newName[0])
 		{
-			decl String:characterName[64];
-			new foundExactMatch=-1, foundPartialMatch=-1;
+			char characterName[64];
+			int foundExactMatch=-1, foundPartialMatch=-1;
 			for(new character; BossKV[character] && character<MAXSPECIALS; character++)
 			{
 				KvRewind(BossKV[character]);
@@ -11376,18 +11361,18 @@ public bool:PickCharacter(boss, companion)
 	return true;
 }
 
-FindCompanion(boss, players, bool:omit[])
+FindCompanion(int boss, int players, bool omit[])
 {
 	static playersNeeded=2;
-	decl String:companionName[64];
+	char companionName[64];
 	KvRewind(BossKV[Special[boss]]);
 	KvGetString(BossKV[Special[boss]], "companion", companionName, sizeof(companionName));
 	if(playersNeeded<players && strlen(companionName))  //Only continue if we have enough players and if the boss has a companion
 	{
-		new companion=GetRandomValidClient(omit);
+		int companion=GetRandomValidClient(omit);
 		Boss[companion]=companion;  //Woo boss indexes!
 		omit[companion]=true;
-		new client=Boss[boss];
+		int client=Boss[boss];
 		Companions=1;
 		if(PickCharacter(boss, companion))  //TODO: This is a bit misleading
 		{
@@ -11419,9 +11404,9 @@ FindCompanion(boss, players, bool:omit[])
 	playersNeeded=2;  //Reset the amount of players needed back after we're done
 }
 
-stock SpawnWeapon(client, String:name[], index, level, qual, String:att[])
+stock SpawnWeapon(int client, char[] name, int index, int level, int qual, char[] att)
 {
-	new Handle:hWeapon=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
+	Handle hWeapon=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
 	if(hWeapon==INVALID_HANDLE)
 	{
 		return -1;
@@ -11431,8 +11416,8 @@ stock SpawnWeapon(client, String:name[], index, level, qual, String:att[])
 	TF2Items_SetItemIndex(hWeapon, index);
 	TF2Items_SetLevel(hWeapon, level);
 	TF2Items_SetQuality(hWeapon, qual);
-	new String:atts[32][32];
-	new count=ExplodeString(att, ";", atts, 32, 32);
+	char atts[32][32];
+	int count=ExplodeString(att, ";", atts, 32, 32);
 
 	if(count % 2)
 	{
@@ -11442,10 +11427,10 @@ stock SpawnWeapon(client, String:name[], index, level, qual, String:att[])
 	if(count>0)
 	{
 		TF2Items_SetNumAttributes(hWeapon, count/2);
-		new i2;
-		for(new i; i<count; i+=2)
+		int i2;
+		for(int i; i<count; i+=2)
 		{
-			new attrib=StringToInt(atts[i]);
+			int attrib=StringToInt(atts[i]);
 			if(!attrib)
 			{
 				LogError("Bad weapon attribute passed: %s ; %s", atts[i], atts[i+1]);
@@ -11462,15 +11447,15 @@ stock SpawnWeapon(client, String:name[], index, level, qual, String:att[])
 		TF2Items_SetNumAttributes(hWeapon, 0);
 	}
 
-	new entity=TF2Items_GiveNamedItem(client, hWeapon);
+	int entity=TF2Items_GiveNamedItem(client, hWeapon);
 	CloseHandle(hWeapon);
 	EquipPlayerWeapon(client, entity);
 	return entity;
 }
 
-stock SpawnCosmetic(client, String:name[], index, level, qual, String:att[])
+stock SpawnCosmetic(int client, char[] name, int index, int level, int qual, char att[])
 {
-	new Handle:hCosmetic=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
+	Handle hCosmetic=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
 	if(hCosmetic==INVALID_HANDLE)
 	{
 		return -1;
@@ -11480,8 +11465,8 @@ stock SpawnCosmetic(client, String:name[], index, level, qual, String:att[])
 	TF2Items_SetItemIndex(hCosmetic, index);
 	TF2Items_SetLevel(hCosmetic, level);
 	TF2Items_SetQuality(hCosmetic, qual);
-	new String:atts[32][32];
-	new count=ExplodeString(att, ";", atts, 32, 32);
+	char atts[32][32];
+	int count=ExplodeString(att, ";", atts, 32, 32);
 
 	if(count % 2)
 	{
@@ -11491,10 +11476,10 @@ stock SpawnCosmetic(client, String:name[], index, level, qual, String:att[])
 	if(count>0)
 	{
 		TF2Items_SetNumAttributes(hCosmetic, count/2);
-		new i2;
-		for(new i; i<count; i+=2)
+		int i2;
+		for(int i; i<count; i+=2)
 		{
-			new attrib=StringToInt(atts[i]);
+			int attrib=StringToInt(atts[i]);
 			if(!attrib)
 			{
 				LogError("Bad weapon attribute passed: %s ; %s", atts[i], atts[i+1]);
@@ -11511,13 +11496,13 @@ stock SpawnCosmetic(client, String:name[], index, level, qual, String:att[])
 		TF2Items_SetNumAttributes(hCosmetic, 0);
 	}
 
-	new entity=TF2Items_GiveNamedItem(client, hCosmetic);
+	int entity=TF2Items_GiveNamedItem(client, hCosmetic);
 	CloseHandle(hCosmetic);
 	EquipPlayerWeapon(client, entity);
 	return entity;
 }
 
-public HintPanelH(Handle:menu, MenuAction:action, client, selection)
+public HintPanelH(Handle menu, MenuAction action, int client, int selection)
 {
 	if(IsValidClient(client) && (action==MenuAction_Select || (action==MenuAction_Cancel && selection==MenuCancel_Exit)))
 	{
@@ -11526,7 +11511,7 @@ public HintPanelH(Handle:menu, MenuAction:action, client, selection)
 	return;
 }
 
-public QueuePanelH(Handle:menu, MenuAction:action, client, selection)
+public QueuePanelH(Handle menu, MenuAction action, int client, int selection)
 {
 	if(action==MenuAction_Select && selection==10)
 	{
@@ -11536,21 +11521,21 @@ public QueuePanelH(Handle:menu, MenuAction:action, client, selection)
 }
 
 
-public Action:QueuePanelCmd(client, args)
+public Action QueuePanelCmd(int client, int args)
 {
 	if(!Enabled2)
 	{
 		return Plugin_Continue;
 	}
 
-	decl String:text[64];
-	new items;
-	new bool:added[MaxClients+1];
+	char text[64];
+	int items;
+	bool added[MaxClients+1];
 
-	new Handle:panel=CreatePanel();
+	Handle panel=CreatePanel();
 	Format(text, sizeof(text), "%T", "thequeue", client);  //"Boss Queue"
 	SetPanelTitle(panel, text);
-	for(new boss; boss<=MaxClients; boss++)  //Add the current bosses to the top of the list
+	for(int boss; boss<=MaxClients; boss++)  //Add the current bosses to the top of the list
 	{
 		if(IsBoss(boss))
 		{
@@ -11564,7 +11549,7 @@ public Action:QueuePanelCmd(client, args)
 	DrawPanelText(panel, "---");
 	do
 	{
-		new target=GetClientWithMostQueuePoints(added);  //Get whoever has the highest queue points out of those who haven't been listed yet
+		int target=GetClientWithMostQueuePoints(added);  //Get whoever has the highest queue points out of those who haven't been listed yet
 		if(!IsValidClient(target))  //When there's no players left, fill up the rest of the list with blank lines
 		{
 			DrawPanelItem(panel, "");
@@ -11594,7 +11579,7 @@ public Action:QueuePanelCmd(client, args)
 	return Plugin_Handled;
 }
 
-public Action:ResetQueuePointsCmd(client, args)
+public Action ResetQueuePointsCmd(int client, int args)
 {
 	if(!Enabled2)
 	{
@@ -11613,7 +11598,7 @@ public Action:ResetQueuePointsCmd(client, args)
 		return Plugin_Handled;
 	}
 
-	new AdminId:admin=GetUserAdmin(client);	 //Normal players
+	AdminId admin=GetUserAdmin(client);	 //Normal players
 	if((admin==INVALID_ADMIN_ID) || !GetAdminFlag(admin, Admin_Cheats))
 	{
 		TurnToZeroPanel(client, client);
@@ -11626,11 +11611,11 @@ public Action:ResetQueuePointsCmd(client, args)
 		return Plugin_Handled;
 	}
 
-	decl String:pattern[MAX_TARGET_LENGTH];
+	char pattern[MAX_TARGET_LENGTH];
 	GetCmdArg(1, pattern, sizeof(pattern));
-	new String:targetName[MAX_TARGET_LENGTH];
-	new targets[MAXPLAYERS], matches;
-	new bool:targetNounIsMultiLanguage;
+	char targetName[MAX_TARGET_LENGTH];
+	int targets[MAXPLAYERS], matches;
+	bool targetNounIsMultiLanguage;
 
 	if((matches=ProcessTargetString(pattern, client, targets, 1, 0, targetName, sizeof(targetName), targetNounIsMultiLanguage))<=0)
 	{
@@ -11640,7 +11625,7 @@ public Action:ResetQueuePointsCmd(client, args)
 
 	if(matches>1)
 	{
-		for(new target; target<matches; target++)
+		for(int target; target<matches; target++)
 		{
 			TurnToZeroPanel(client, targets[target]);  //FIXME:  This can only handle one client currently and doesn't iterate through all clients
 		}
@@ -11652,7 +11637,7 @@ public Action:ResetQueuePointsCmd(client, args)
 	return Plugin_Handled;
 }
 
-public TurnToZeroPanelH(Handle:menu, MenuAction:action, client, position)
+public TurnToZeroPanelH(Handle menu, MenuAction action, int client, int position)
 {
 	if(action==MenuAction_Select && position==1)
 	{
@@ -11670,15 +11655,15 @@ public TurnToZeroPanelH(Handle:menu, MenuAction:action, client, position)
 	}
 }
 
-public Action:TurnToZeroPanel(client, target)
+public Action TurnToZeroPanel(int client, int target)
 {
 	if(!Enabled2)
 	{
 		return Plugin_Continue;
 	}
 
-	new Handle:panel=CreatePanel();
-	decl String:text[128];
+	Handle panel=CreatePanel();
+	char text[128];
 	if(client==target)
 	{
 		Format(text, sizeof(text), "%T", "to0_title", client);  //Do you really want to set your queue points to 0?
@@ -11700,7 +11685,7 @@ public Action:TurnToZeroPanel(client, target)
 	return Plugin_Handled;
 }
 
-bool:GetClientClassInfoCookie(client)
+bool GetClientClassInfoCookie(int client)
 {
 	if(!IsValidClient(client) || IsFakeClient(client))
 	{
@@ -11712,14 +11697,14 @@ bool:GetClientClassInfoCookie(client)
 		return true;
 	}
 
-	decl String:cookies[24];
-	decl String:cookieValues[8][5];
+	char cookies[24];
+	char cookieValues[8][5];
 	GetClientCookie(client, FF2Cookies, cookies, sizeof(cookies));
 	ExplodeString(cookies, " ", cookieValues, 8, 5);
 	return StringToInt(cookieValues[3])==1;
 }
 
-GetClientQueuePoints(client)
+GetClientQueuePoints(int client)
 {
 	if(!IsValidClient(client) || !AreClientCookiesCached(client))
 	{
@@ -11731,17 +11716,17 @@ GetClientQueuePoints(client)
 		return botqueuepoints;
 	}
 
-	decl String:cookies[24], String:cookieValues[8][5];
+	char cookies[24], String:cookieValues[8][5];
 	GetClientCookie(client, FF2Cookies, cookies, sizeof(cookies));
 	ExplodeString(cookies, " ", cookieValues, 8, 5);
 	return StringToInt(cookieValues[0]);
 }
 
-SetClientQueuePoints(client, points)
+SetClientQueuePoints(int client, int points)
 {
 	if(IsValidClient(client) && !IsFakeClient(client) && AreClientCookiesCached(client))
 	{
-		decl String:cookies[24], String:cookieValues[8][5];
+		char cookies[24], cookieValues[8][5];
 		GetClientCookie(client, FF2Cookies, cookies, sizeof(cookies));
 		ExplodeString(cookies, " ", cookieValues, 8, 5);
 		Format(cookies, sizeof(cookies), "%i %s %s %s %s %s %s %s", points, cookieValues[1], cookieValues[2], cookieValues[3], cookieValues[4], cookieValues[5], cookieValues[6], cookieValues[7]);
@@ -11749,11 +11734,11 @@ SetClientQueuePoints(client, points)
 	}
 }
 
-stock bool:IsBoss(client)
+stock bool IsBoss(int client)
 {
 	if(IsValidClient(client))
 	{
-		for(new boss; boss<=MaxClients; boss++)
+		for(int boss; boss<=MaxClients; boss++)
 		{
 			if(Boss[boss]==client)
 			{
@@ -11764,9 +11749,9 @@ stock bool:IsBoss(client)
 	return false;
 }
 
-DoOverlay(client, const String:overlay[])
+DoOverlay(int client, const char[] overlay)
 {
-	new flags=GetCommandFlags("r_screenoverlay");
+	int flags=GetCommandFlags("r_screenoverlay");
 	SetCommandFlags("r_screenoverlay", flags & ~FCVAR_CHEAT);
 	if(overlay[0]=='\0')
 	{
@@ -11779,7 +11764,7 @@ DoOverlay(client, const String:overlay[])
 	SetCommandFlags("r_screenoverlay", flags);
 }
 
-public FF2PanelH(Handle:menu, MenuAction:action, client, selection)
+public FF2PanelH(Handle menu, MenuAction action, int client, int selection)
 {
 	if(action==MenuAction_Select)
 	{
@@ -11825,12 +11810,12 @@ public FF2PanelH(Handle:menu, MenuAction:action, client, selection)
 	}
 }
 
-public Action:FF2Panel(client, args)  //._.
+public Action FF2Panel(int client, int args)  //._.
 {
 	if(Enabled2 && IsValidClient(client, false))
 	{
-		new Handle:panel=CreatePanel();
-		decl String:text[256];
+		Handle panel=CreatePanel();
+		char text[256];
 		SetGlobalTransTarget(client);
 		Format(text, sizeof(text), "%T", "menu_1", client);  //What's up?
 		SetPanelTitle(panel, text);
