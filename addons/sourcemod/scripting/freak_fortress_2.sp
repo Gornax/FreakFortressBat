@@ -45,7 +45,6 @@ last time or to encourage others to do the same.
   http://forums.alliedmods.net/showthread.php?t=313008
 */
 #pragma semicolon 1
-//#pragma newdecls required
 
 #include <sourcemod>
 #include <freak_fortress_2>
@@ -67,6 +66,8 @@ last time or to encourage others to do the same.
 #tryinclude <updater>
 #tryinclude <freak_fortress_2_kspree>	// TODO: Make an include for checking client's current prefs
 #define REQUIRE_PLUGIN
+
+#pragma newdecls required
 
 /*
     This fork uses a different versioning system
