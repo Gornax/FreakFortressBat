@@ -30,13 +30,12 @@ Handle jumpHUD;
 
 bool enableSuperDuperJump[MAXPLAYERS+1];
 float UberRageCount[MAXPLAYERS+1];
-BossTeam=view_as<int>TFTeam_Blue;
+int BossTeam=view_as<int>(TFTeam_Blue);
 
 ConVar cvarOldJump;
 ConVar cvarBaseJumperStun;
 
 bool oldJump;
-bool removeBaseJumperOnStun;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -63,10 +62,8 @@ public void OnAllPluginsLoaded()
 	cvarBaseJumperStun=FindConVar("ff2_base_jumper_stun");
 
 	HookConVarChange(cvarOldJump, CvarChange);
-	HookConVarChange(cvarBaseJumperStun, CvarChange);
 
 	oldJump=GetConVarBool(cvarOldJump);
-	removeBaseJumperOnStun=GetConVarBool(cvarBaseJumperStun);
 }
 
 public void CvarChange(Handle convar, const char[] oldValue, const char[] newValue)
@@ -74,10 +71,6 @@ public void CvarChange(Handle convar, const char[] oldValue, const char[] newVal
 	if(convar==cvarOldJump)
 	{
 		oldJump=view_as<bool>StringToInt(newValue);
-	}
-	else if(convar==cvarBaseJumperStun)
-	{
-		removeBaseJumperOnStun=view_as<bool>StringToInt(newValue);
 	}
 }
 
@@ -118,7 +111,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	{
 		if(!boss)  //Boss indexes are just so amazing
 		{
-			float distance=FF2_GetRageDist(boss, this_plugin_name, ability_name);
+			float distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
 			float newDistance=distance;
 			Action action=Plugin_Continue;
 
@@ -151,9 +144,9 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	else if(!strcmp(ability_name, "rage_uber"))
 	{
 		int client=GetClientOfUserId(FF2_GetBossUserId(boss));
-		TF2_AddCondition(client, TFCond_Ubercharged, FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0));
+		TF2_AddCondition(client, TFCond_Ubercharged, view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0)));
 		SetEntProp(client, Prop_Data, "m_takedamage", 0);
-		CreateTimer(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0), Timer_StopUber, boss, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0)), Timer_StopUber, boss, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	else if(!strcmp(ability_name, "rage_stun"))
 	{
@@ -223,27 +216,54 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	return Plugin_Continue;
 }
 
-void Rage_Stun(const char[] ability_name, int boss)
+void Rage_Stun(const char[] ability_name, int boss)	// Credits to sarysa for stun flags and particle effects args
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
-	float bossPosition[3], targetPosition[3];
-	float duration=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0);
-	float distance=FF2_GetRageDist(boss, this_plugin_name, ability_name);
-	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
+ // Duration
+	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0));
+ // Distance
+	float distance=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 2, -1.0));
+	if(distance<=0)
+		distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
+ // Stun Flags
+	char flagOverrideStr[HEX_OR_DEC_STRING_LENGTH];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, HEX_OR_DEC_STRING_LENGTH);
+	new flagOverride = ReadHexOrDecInt(flagOverrideStr)
+	if(flagOverride==0)
+		flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
+ // Slowdown
+	float slowdown=view_as<float>FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75);
+ // Sound To Boss
+	bool sounds=view_as<bool>FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1);
+ // Particle Effect
+	char particleEffect[MAX_EFFECT_NAME_LENGTH];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, MAX_EFFECT_NAME_LENGTH);
+	if(IsEmptyString(particleEffect))
+		particleEffect="yikes_fx";
+ // Ignore
+	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 0);
+ // Friendly Fire
+	int friendly=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, -1);
+	if(friendly<0)
+		friendly=FindConVar("mp_friendlyfire");
+ // Remove Parachute
+	bool removeBaseJumperOnStun=view_as<bool>FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, GetConVarBool(cvarBaseJumperStun));
 
+	float bossPosition[3], targetPosition[3];
+	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
 	for(int target=1; target<=MaxClients; target++)
 	{
-		if(IsClientInGame(target) && IsPlayerAlive(target) && GetClientTeam(target)!=BossTeam)
+		if(IsClientInGame(target) && IsPlayerAlive(target) && friendly==0 ? GetClientTeam(target)!=BossTeam : target!=client)
 		{
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPosition);
-			if(!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) && (GetVectorDistance(bossPosition, targetPosition)<=distance))
+			if((!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) || (ignore>0 && ignore!=2))) && (!TF2_IsPlayerInCondition(target, TFCond_MegaHeal) || ignore>1) && (GetVectorDistance(bossPosition, targetPosition)<=distance))
 			{
 				if(removeBaseJumperOnStun)
 				{
 					TF2_RemoveCondition(target, TFCond_Parachute);
 				}
-				TF2_StunPlayer(target, duration, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
-				CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+				TF2_StunPlayer(target, duration, slowdown, flagOverride, sounds ? client : 0);
+				CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
@@ -259,8 +279,8 @@ void Rage_StunSentry(const char[] ability_name, int boss)
 {
 	float bossPosition[3], sentryPosition[3];
 	GetEntPropVector(GetClientOfUserId(FF2_GetBossUserId(boss)), Prop_Send, "m_vecOrigin", bossPosition);
-	float duration=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 7.0);
-	float distance=FF2_GetRageDist(boss, this_plugin_name, ability_name);
+	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 7.0));
+	float distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
 
 	int sentry;
 	while((sentry=FindEntityByClassname(sentry, "obj_sentrygun"))!=-1)
@@ -288,8 +308,8 @@ public Action Timer_EnableSentry(Handle timer, any sentryid)
 int Charge_BraveJump(const char[] ability_name, int boss, int slot, int status)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
-	float charge=FF2_GetBossCharge(boss, slot);
-	float multiplier=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 3, 1.0);
+	float charge=view_as<float>(FF2_GetBossCharge(boss, slot));
+	float multiplier=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 3, 1.0));
 
 	switch(status)
 	{
@@ -388,7 +408,7 @@ int Charge_BraveJump(const char[] ability_name, int boss, int slot, int status)
 int Charge_Teleport(const char[] ability_name, int boss, int slot, int status)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
-	float charge=FF2_GetBossCharge(boss, slot);
+	float charge=view_as<float>(FF2_GetBossCharge(boss, slot));
 	switch(status)
 	{
 		case 1:
@@ -466,7 +486,7 @@ int Charge_Teleport(const char[] ability_name, int boss, int slot, int status)
 				SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + (enableSuperDuperJump ? 4.0:2.0));
 				if(GetEntProp(target, Prop_Send, "m_bDucked"))
 				{
-					new Float:temp[3]={24.0, 24.0, 62.0};  //Compiler won't accept directly putting it into SEPV -.-
+					float temp[3]={24.0, 24.0, 62.0};  //Compiler won't accept directly putting it into SEPV -.-
 					SetEntPropVector(client, Prop_Send, "m_vecMaxs", temp);
 					SetEntProp(client, Prop_Send, "m_bDucked", 1);
 					SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
@@ -506,7 +526,7 @@ int Charge_Teleport(const char[] ability_name, int boss, int slot, int status)
 
 public Action Timer_ResetCharge(Handle timer, any boss)  //FIXME: What.
 {
-	new slot=boss%10000;
+	int slot=boss%10000;
 	boss/=1000;
 	FF2_SetBossCharge(boss, slot, 0.0);
 }
