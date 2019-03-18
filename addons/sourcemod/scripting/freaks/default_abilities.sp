@@ -228,19 +228,19 @@ void Rage_Stun(const char[] ability_name, int boss)
 	if(distance<=0)
 		distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
  // Stun Flags
-	char flagOverrideStr[HEX_OR_DEC_STRING_LENGTH];
-	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, HEX_OR_DEC_STRING_LENGTH);
-	new flagOverride = ReadHexOrDecInt(flagOverrideStr)
+	char flagOverrideStr[12];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, sizeof(flagOverrideStr));
+	int flagOverride = ReadHexOrDecInt(flagOverrideStr);
 	if(flagOverride==0)
 		flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
  // Slowdown
-	float slowdown=view_as<float>FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75);
+	float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75));
  // Sound To Boss
-	bool sounds=view_as<bool>FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1);
+	bool sounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1));
  // Particle Effect
 	char particleEffect[48];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
-	if(particleEffect==0)
+	if(particleEffect[]==0)
 		particleEffect=SPOOK;
  // Ignore
 	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 0);
@@ -709,7 +709,7 @@ public Action FF2_OnTriggerHurt(int boss, int triggerhurt, float &damage)
 	return Plugin_Continue;
 }
 
-stock int ReadHexOrDecInt(char[HEX_OR_DEC_STRING_LENGTH] hexOrDecString)	// Credits to sarysa
+stock int ReadHexOrDecInt(char hexOrDecString[12])	// Credits to sarysa
 {
 	if(StrContains(hexOrDecString, "0x")==0)
 	{
@@ -733,7 +733,7 @@ stock int ReadHexOrDecInt(char[HEX_OR_DEC_STRING_LENGTH] hexOrDecString)	// Cred
 
 stock int ReadHexOrDecString(int boss, const char[] ability_name, int args)
 {
-	static char hexOrDecString[HEX_OR_DEC_STRING_LENGTH];
-	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, args, hexOrDecString, HEX_OR_DEC_STRING_LENGTH);
+	static char hexOrDecString[12];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, args, hexOrDecString, sizeof(hexOrDecString));
 	return ReadHexOrDecInt(hexOrDecString);
 }
