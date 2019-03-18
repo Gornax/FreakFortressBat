@@ -20,6 +20,8 @@ public Plugin myinfo=
 	version		=	PLUGIN_VERSION,
 };
 
+#define SPOOK "yikes_fx"
+
 Handle OnHaleJump;
 Handle OnHaleRage;
 Handle OnHaleWeighdown;
@@ -70,7 +72,7 @@ public void CvarChange(Handle convar, const char[] oldValue, const char[] newVal
 {
 	if(convar==cvarOldJump)
 	{
-		oldJump=view_as<bool>StringToInt(newValue);
+		oldJump=view_as<bool>(StringToInt(newValue));
 	}
 }
 
@@ -216,7 +218,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	return Plugin_Continue;
 }
 
-void Rage_Stun(const char[] ability_name, int boss)	// Credits to sarysa for stun flags and particle effects args
+void Rage_Stun(const char[] ability_name, int boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
  // Duration
@@ -236,18 +238,18 @@ void Rage_Stun(const char[] ability_name, int boss)	// Credits to sarysa for stu
  // Sound To Boss
 	bool sounds=view_as<bool>FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1);
  // Particle Effect
-	char particleEffect[MAX_EFFECT_NAME_LENGTH];
-	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, MAX_EFFECT_NAME_LENGTH);
-	if(IsEmptyString(particleEffect))
-		particleEffect="yikes_fx";
+	char particleEffect[48];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
+	if(particleEffect==0)
+		particleEffect=SPOOK;
  // Ignore
 	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 0);
  // Friendly Fire
 	int friendly=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, -1);
 	if(friendly<0)
-		friendly=FindConVar("mp_friendlyfire");
+		friendly=GetConVarInt(FindConVar("mp_friendlyfire"));
  // Remove Parachute
-	bool removeBaseJumperOnStun=view_as<bool>FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, GetConVarBool(cvarBaseJumperStun));
+	bool removeBaseJumperOnStun=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, GetConVarInt(cvarBaseJumperStun)));
 
 	float bossPosition[3], targetPosition[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
@@ -256,7 +258,7 @@ void Rage_Stun(const char[] ability_name, int boss)	// Credits to sarysa for stu
 		if(IsClientInGame(target) && IsPlayerAlive(target) && friendly==0 ? GetClientTeam(target)!=BossTeam : target!=client)
 		{
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPosition);
-			if((!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) || (ignore>0 && ignore!=2))) && (!TF2_IsPlayerInCondition(target, TFCond_MegaHeal) || ignore>1) && (GetVectorDistance(bossPosition, targetPosition)<=distance))
+			if((!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) || (ignore>0 && ignore!=2)) && (!TF2_IsPlayerInCondition(target, TFCond_MegaHeal) || ignore>1) && GetVectorDistance(bossPosition, targetPosition)<=distance)
 			{
 				if(removeBaseJumperOnStun)
 				{
@@ -705,4 +707,33 @@ public Action FF2_OnTriggerHurt(int boss, int triggerhurt, float &damage)
 		FF2_SetBossCharge(boss, 1, 0.0);
 	}
 	return Plugin_Continue;
+}
+
+stock int ReadHexOrDecInt(char[HEX_OR_DEC_STRING_LENGTH] hexOrDecString)	// Credits to sarysa
+{
+	if(StrContains(hexOrDecString, "0x")==0)
+	{
+		int result=0;
+		for(int i=2; i<10 && hexOrDecString[i]!=0; i++)
+		{
+			result=result<<4;
+				
+			if(hexOrDecString[i]>='0' && hexOrDecString[i]<='9')
+				result+=hexOrDecString[i]-'0';
+			else if(hexOrDecString[i]>='a' && hexOrDecString[i]<='f')
+				result+=hexOrDecString[i]-'a'+10;
+			else if(hexOrDecString[i]>='A' && hexOrDecString[i]<='F')
+				result+=hexOrDecString[i]-'A'+10;
+		}
+		return result;
+	}
+	else
+		return StringToInt(hexOrDecString);
+}
+
+stock int ReadHexOrDecString(int boss, const char[] ability_name, int args)
+{
+	static char hexOrDecString[HEX_OR_DEC_STRING_LENGTH];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, args, hexOrDecString, HEX_OR_DEC_STRING_LENGTH);
+	return ReadHexOrDecInt(hexOrDecString);
 }
