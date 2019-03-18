@@ -240,7 +240,7 @@ void Rage_Stun(const char[] ability_name, int boss)
  // Particle Effect
 	char particleEffect[48];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
-	if(particleEffect[]==0)
+	if(particleEffect[0]==0)
 		particleEffect=SPOOK;
  // Ignore
 	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 0);
@@ -279,21 +279,66 @@ public Action Timer_StopUber(Handle timer, any boss)
 
 void Rage_StunSentry(const char[] ability_name, int boss)
 {
+	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float bossPosition[3], sentryPosition[3];
 	GetEntPropVector(GetClientOfUserId(FF2_GetBossUserId(boss)), Prop_Send, "m_vecOrigin", bossPosition);
-	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 7.0));
-	float distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
 
-	int sentry;
-	while((sentry=FindEntityByClassname(sentry, "obj_sentrygun"))!=-1)
+ // Duration
+	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 7.0));
+ // Distance
+	float distance=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 2, -1.0));
+	if(distance<=0)
+		distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
+ // Sentry Health
+ 	bool destory=false;
+	float health=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 3, 1.0));
+	if(health<=0)
+		destory=true;
+ // Sentry Ammo
+	float ammo=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 1.0));
+ // Sentry Rockets
+	float rockets=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 5, 1.0));
+ // Particle Effect
+	char particleEffect[48];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
+	if(particleEffect[0]==0)
+		particleEffect=SPOOK;
+ // Buildings
+	int buildings=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 1);
+	// 1: Sentry
+	// 2: Dispenser
+	// 3: Teleporter
+	// 4: Sentry + Dispenser
+	// 5: Sentry + Teleporter
+	// 6: Dispenser + Teleporter
+	// 7: ALL
+ // Friendly Fire
+	int friendly=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, -1);
+	if(friendly<0)
+		friendly=GetConVarInt(FindConVar("mp_friendlyfire"));
+
+	if(buildings>0 && buildings!=2 && buildings!=3 && buildings!=6)
 	{
-		GetEntPropVector(sentry, Prop_Send, "m_vecOrigin", sentryPosition);
-		if(GetVectorDistance(bossPosition, sentryPosition)<=distance)
+		int sentry;
+		while((sentry=FindEntityByClassname(sentry, "obj_sentrygun"))!=-1)
 		{
-			SetEntProp(sentry, Prop_Send, "m_bDisabled", 1);
-			CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(sentry, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
-			CreateTimer(duration, Timer_EnableSentry, EntIndexToEntRef(sentry), TIMER_FLAG_NO_MAPCHANGE);
+			if((((GetEntProp(sentry, Prop_Send, "m_nSkin") % 2)!=(GetClientTeam(client) % 2)) || friendly>0) && !GetEntProp(sentry, Prop_Send, "m_bCarried") && !GetEntProp(sentry, Prop_Send, "m_bPlacing"))
+			{
+				GetEntPropVector(sentry, Prop_Send, "m_vecOrigin", sentryPosition);
+				if(GetVectorDistance(bossPosition, sentryPosition)<=distance)
+				{
+					SetEntProp(sentry, Prop_Send, "m_bDisabled", 1);
+					CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(sentry, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(duration, Timer_EnableSentry, EntIndexToEntRef(sentry), TIMER_FLAG_NO_MAPCHANGE);
+				}
+			}
 		}
+	}
+	if(buildings>1 && buildings!=3 && buildings!=5)
+	{
+	}
+	if(buildings>2 && buildings!=4)
+	{
 	}
 }
 
