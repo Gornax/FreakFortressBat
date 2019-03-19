@@ -267,7 +267,8 @@ public Action Timer_Rage_Stun(Handle timer, any boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	int victims=-1;
-	bool solorage;
+	bool solorage=false;
+	char bossName[128];
 	float bossPosition[3], targetPosition[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
  // Initial Duration
@@ -280,7 +281,7 @@ public Action Timer_Rage_Stun(Handle timer, any boss)
 	char flagOverrideStr[12];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, "rage_stun", 3, flagOverrideStr, sizeof(flagOverrideStr));
 	int flagOverride = ReadHexOrDecInt(flagOverrideStr);
-	if(strlen(flagOverride)==0)
+	if(flagOverride==0)
 		flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
  // Slowdown
 	float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 4, 0.75));
@@ -333,7 +334,8 @@ public Action Timer_Rage_Stun(Handle timer, any boss)
 	{
 		if(victims==0 && (duration!=soloduration || GetConVarBool(cvarSoloShame)))
 		{
-			solorage=true;
+			solorage=true;	
+			FF2_GetBossSpecial(boss, bossName, sizeof(bossName));
 			if(duration!=soloduration)
 				duration=soloduration;
 		}
