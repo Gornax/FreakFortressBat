@@ -34,11 +34,11 @@ bool enableSuperDuperJump[MAXPLAYERS+1];
 float UberRageCount[MAXPLAYERS+1];
 float GoombaBlockedUntil[MAXPLAYERS+1];
 int BossTeam=view_as<int>(TFTeam_Blue);
+bool Outdated=false;
 
 ConVar cvarOldJump;
 ConVar cvarBaseJumperStun;
-
-bool oldJump;
+ConVar cvarSoloShame;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -50,6 +50,21 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart2()
 {
+	new version[3];
+	FF2_GetFF2Version(version);
+	if(version[0]!=1)
+	{
+		SetFailState("This subplugin depends on FF2 V1");
+	}
+	/*new fversion[3];
+	FF2_GetForkVersion(fversion);
+	if(fversion[0]==1 && fversion[1]<18)
+	{
+		PrintToServer("[FF2] Warning: This subplugin depends on at least Unofficial FF2 v1.18.0");
+		PrintToServer("[FF2] Warning: \"rage_stun\" args 20 and up are disabled");
+		Outdated=true;
+	}*/
+
 	jumpHUD=CreateHudSynchronizer();
 
 	HookEvent("object_deflected", OnDeflect, EventHookMode_Pre);
@@ -63,18 +78,8 @@ public void OnAllPluginsLoaded()
 {
 	cvarOldJump=FindConVar("ff2_oldjump");  //Created in freak_fortress_2.sp
 	cvarBaseJumperStun=FindConVar("ff2_base_jumper_stun");
-
-	HookConVarChange(cvarOldJump, CvarChange);
-
-	oldJump=GetConVarBool(cvarOldJump);
-}
-
-public void CvarChange(Handle convar, const char[] oldValue, const char[] newValue)
-{
-	if(convar==cvarOldJump)
-	{
-		oldJump=view_as<bool>(StringToInt(newValue));
-	}
+	if(!Outdated)
+		cvarSoloShame=FindConVar("ff2_solo_shame");
 }
 
 public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
@@ -139,10 +144,16 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	}
 	else if(!strcmp(ability_name, "charge_bravejump"))
 	{
+		//char name[64];
+		//FF2_GetBossSpecial(boss, name, sizeof(name));
+		//PrintToServer("[FF2] Warning: \"charge_bravejump\" has been deprecated!  Please use ff2_dynamic_defaults for %s", name);
 		Charge_BraveJump(ability_name, boss, slot, status);
 	}
 	else if(!strcmp(ability_name, "charge_teleport"))
 	{
+		//char name[64];
+		//FF2_GetBossSpecial(boss, name, sizeof(name));
+		//PrintToServer("[FF2] Warning: \"charge_teleport\" has been deprecated!  Please use ff2_dynamic_defaults for %s", name);
 		Charge_Teleport(ability_name, boss, slot, status);
 	}
 	else if(!strcmp(ability_name, "rage_uber"))
@@ -154,23 +165,38 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	}
 	else if(!strcmp(ability_name, "rage_stun"))
 	{
-		Rage_Stun(ability_name, boss);
+		CreateTimer(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 10, 0.0), Timer_Rage_Stun, boss);
 	}
 	else if(!strcmp(ability_name, "rage_stunsg"))
 	{
 		Rage_StunSentry(ability_name, boss);
 	}
-	else if(!strcmp(ability_name, "rage_preventtaunt"))  // TODO: Make it block taunts (maybe except RPS)
+	else if(!strcmp(ability_name, "special_preventtaunt"))
 	{
-		char name[64];
-		FF2_GetBossSpecial(boss, name, sizeof(name));
-		PrintToServer("[FF2] Warning: \"rage_preventtaunt\" is used on %s. Future update will make this ability block %s from taunting.", name, name);
+		PrintToServer("[FF2] Warning: \"special_preventtaunt\" is used on %s.  Future update will make this ability block %s from taunting.", name, name);
 	}
 	else if(!strcmp(ability_name, "rage_instant_teleport"))
 	{
 		int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 		float position[3];
 		bool otherTeamIsAlive;
+	// Stun Duration
+		float stun=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 2.0));
+	// Friendly Teleport
+		//bool friendly=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 2, 1));
+	// Stun Flags
+		char flagOverrideStr[12];
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, sizeof(flagOverrideStr));
+		int flagOverride = ReadHexOrDecInt(flagOverrideStr);
+		if(strlen(flagOverride)==0)
+			flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
+	// Slowdown
+		float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75));
+	// Sound To Client
+		bool sounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1));
+	// Particle Effect
+		char particleEffect[48];
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
 
 		for(int target=1; target<=MaxClients; target++)
 		{
@@ -198,6 +224,12 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 		}
 		while(!IsValidEntity(target) || target==client || (FF2_GetFF2flags(target) & FF2FLAG_ALLOWSPAWNINBOSSTEAM) || !IsPlayerAlive(target));
 
+		if(strlen(particleEffect)>0)
+		{
+			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, particleEffect)), TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, particleEffect, _, false)), TIMER_FLAG_NO_MAPCHANGE);
+		}
+
 		if(IsValidEntity(target))
 		{
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", position);
@@ -208,14 +240,18 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 				SetEntPropVector(client, Prop_Send, "m_vecMaxs", temp);
 				SetEntProp(client, Prop_Send, "m_bDucked", 1);
 				SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
-				CreateTimer(0.2, Timer_StunBoss, boss, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.2, Timer_StunBoss, boss, TIMER_FLAG_NO_MAPCHANGE); // TODO: Make this use new args
 			}
 			else
 			{
-				TF2_StunPlayer(client, 2.0, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, target);
+				TF2_StunPlayer(client, stun, slowdown, flagOverride, sounds==1 ? target : 0);
 			}
 			TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
 		}
+	}
+	else if(!strcmp(ability_name, "special_notripledamage"))
+	{
+		PrintToServer("[FF2] Warning: \"special_notripledamage\" is used on %s.  This ability was only present on BBG, use \"triple\" setting instead.", name);
 	}
 	return Plugin_Continue;
 }
@@ -223,9 +259,11 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 void Rage_Stun(const char[] ability_name, int boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
+	int victims=-1;
+	bool solorage;
 	float bossPosition[3], targetPosition[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
- // Duration
+ // Initial Duration
 	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0));
  // Distance
 	float distance=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 2, -1.0));
@@ -235,7 +273,7 @@ void Rage_Stun(const char[] ability_name, int boss)
 	char flagOverrideStr[12];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, sizeof(flagOverrideStr));
 	int flagOverride = ReadHexOrDecInt(flagOverrideStr);
-	if(flagOverride==0)
+	if(strlen(flagOverride)==0)
 		flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
  // Slowdown
 	float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75));
@@ -244,7 +282,7 @@ void Rage_Stun(const char[] ability_name, int boss)
  // Particle Effect
 	char particleEffect[48];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
-	if(StrEqual(particleEffect, ""))
+	if(strlen(particleEffect)==0)
 		particleEffect=SPOOK;
  // Ignore
 	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 0);
@@ -254,10 +292,54 @@ void Rage_Stun(const char[] ability_name, int boss)
 		friendly=GetConVarInt(FindConVar("mp_friendlyfire"));
  // Remove Parachute
 	bool removeBaseJumperOnStun=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 9, GetConVarInt(cvarBaseJumperStun)));
+ // Max Duration
+	float maxduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 11, -1.0));
+ // Add Duration
+	float addduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 12, 0.0));
+	if(maxduration<=0)
+	{
+		maxduration=duration;
+		addduration=0.0;
+	}
+ // Solo Rage Duration
+	float soloduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 13, -1.0));
+	if(soloduration<=0)
+	{
+		soloduration=duration;
+	}
 
+	if((addduration!=0 || soloduration!=duration) && !Outdated)
+	{
+		for(int target=1; target<=MaxClients; target++)
+		{
+			if(IsClientInGame(target) && IsPlayerAlive(target) && ((friendly==1 || GetClientTeam(target)!=BossTeam) || target!=client))
+			{
+				GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPosition);
+				if((!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) || (ignore>0 && ignore!=2)) && (!TF2_IsPlayerInCondition(target, TFCond_MegaHeal) || ignore>1) && GetVectorDistance(bossPosition, targetPosition)<=distance)
+				{
+					victims++;
+				}
+			}
+		}
+	}
+	if(victims>=0)
+	{
+		if(victims==0 && (duration!=soloduration || GetConVarBool(cvarSoloShame)))
+		{
+			solorage=true;
+			if(duration!=soloduration)
+				duration=soloduration;
+		}
+		else if(victims>0 && duration<maxduration)
+		{
+			duration+=addduration*victims;
+			if(duration>maxduration)
+				duration=maxduration;
+		}
+	}
 	for(int target=1; target<=MaxClients; target++)
 	{
-		if(IsClientInGame(target) && IsPlayerAlive(target) && ((friendly==0 && GetClientTeam(target)!=BossTeam) || target!=client))
+		if(IsClientInGame(target) && IsPlayerAlive(target) && ((friendly==1 || GetClientTeam(target)!=BossTeam) || target!=client))
 		{
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPosition);
 			if((!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) || (ignore>0 && ignore!=2)) && (!TF2_IsPlayerInCondition(target, TFCond_MegaHeal) || ignore>1) && GetVectorDistance(bossPosition, targetPosition)<=distance)
@@ -266,11 +348,29 @@ void Rage_Stun(const char[] ability_name, int boss)
 				{
 					TF2_RemoveCondition(target, TFCond_Parachute);
 				}
+				if(solorage)
+				{
+					CreateTimer(duration, Timer_SoloRageResult, target);
+					CPrintToChatAll("{olive}[FF2]{default} %t", "Solo Rage", bossName);
+				}
 				TF2_StunPlayer(target, duration, slowdown, flagOverride, sounds ? client : 0);
 				CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
+}
+
+public Action Timer_SoloRageResult(Handle timer, any client)
+{
+	if(!IsClientInGame(client) || FF2_GetRoundState()!=1)
+		return Plugin_Continue;
+
+	if(IsPlayerAlive(client))
+		CPrintToChatAll("{olive}[FF2]{default} %t", "Solo Rage Fail");
+	else
+		CPrintToChatAll("{olive}[FF2]{default} %t", "Solo Rage Win");
+
+	return Plugin_Continue;
 }
 
 public Action Timer_StopUber(Handle timer, any boss)
@@ -303,7 +403,7 @@ void Rage_StunSentry(const char[] ability_name, int boss)
  // Particle Effect
 	char particleEffect[48];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
-	if(StrEqual(particleEffect, ""))
+	if(strlen(particleEffect)==0)
 		particleEffect=SPOOK;
  // Buildings
 	int buildings=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 1);
@@ -421,6 +521,7 @@ int Charge_BraveJump(const char[] ability_name, int boss, int slot, int status)
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge=view_as<float>(FF2_GetBossCharge(boss, slot));
 	float multiplier=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 3, 1.0));
+	bool oldJump=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 4, GetConVarInt(cvarOldJump)));
 
 	switch(status)
 	{
@@ -466,12 +567,12 @@ int Charge_BraveJump(const char[] ability_name, int boss, int slot, int status)
 			{
 				if(enableSuperDuperJump[boss])
 				{
-					velocity[2]=750+(charge/4)*13.0+2000;
+					velocity[2]=(750+(charge/4)*13.0*multiplier)+2000;
 					enableSuperDuperJump[boss]=false;
 				}
 				else
 				{
-					velocity[2]=750+(charge/4)*13.0;
+					velocity[2]=750+(charge/4)*13.0*multiplier;
 				}
 				SetEntProp(client, Prop_Send, "m_bJumping", 1);
 				velocity[0]*=(1+Sine((charge/4)*FLOAT_PI/50));
