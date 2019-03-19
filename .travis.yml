@@ -28,7 +28,7 @@ before_script:
     - wget "https://forums.alliedmods.net/attachment.php?attachmentid=116849&d=1377667508" -O include/tf2attributes.inc
 
     - chmod +x spcomp
-    - mkdir compiled
+    - mkdir compiled compiled/freaks
 script: ./compile.sh freak_fortress_2.sp freaks/*.sp
 
 # Notifications
