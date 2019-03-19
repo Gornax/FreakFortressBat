@@ -50,13 +50,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart2()
 {
-	new version[3];
+	int version[3];
 	FF2_GetFF2Version(version);
 	if(version[0]!=1)
 	{
 		SetFailState("This subplugin depends on FF2 V1");
 	}
-	/*new fversion[3];
+	/*int fversion[3];
 	FF2_GetForkVersion(fversion);
 	if(fversion[0]==1 && fversion[1]<18)
 	{
@@ -165,7 +165,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	}
 	else if(!strcmp(ability_name, "rage_stun"))
 	{
-		CreateTimer(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 10, 0.0), Timer_Rage_Stun, boss);
+		CreateTimer(view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 10, 0.0)), Timer_Rage_Stun, boss);
 	}
 	else if(!strcmp(ability_name, "rage_stunsg"))
 	{
@@ -173,6 +173,8 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	}
 	else if(!strcmp(ability_name, "special_preventtaunt"))
 	{
+		char name[64];
+		FF2_GetBossSpecial(boss, name, sizeof(name));
 		PrintToServer("[FF2] Warning: \"special_preventtaunt\" is used on %s.  Future update will make this ability block %s from taunting.", name, name);
 	}
 	else if(!strcmp(ability_name, "rage_instant_teleport"))
@@ -188,7 +190,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 		char flagOverrideStr[12];
 		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, sizeof(flagOverrideStr));
 		int flagOverride = ReadHexOrDecInt(flagOverrideStr);
-		if(strlen(flagOverride)==0)
+		if(flagOverride==0)
 			flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
 	// Slowdown
 		float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75));
@@ -244,19 +246,24 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 			}
 			else
 			{
-				TF2_StunPlayer(client, stun, slowdown, flagOverride, sounds==1 ? target : 0);
+				if(sounds)
+					TF2_StunPlayer(client, stun, slowdown, flagOverride, target);
+				else
+					TF2_StunPlayer(client, stun, slowdown, flagOverride, 0);
 			}
 			TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
 		}
 	}
 	else if(!strcmp(ability_name, "special_notripledamage"))
 	{
+		char name[64];
+		FF2_GetBossSpecial(boss, name, sizeof(name));
 		PrintToServer("[FF2] Warning: \"special_notripledamage\" is used on %s.  This ability was only present on BBG, use \"triple\" setting instead.", name);
 	}
 	return Plugin_Continue;
 }
 
-void Rage_Stun(const char[] ability_name, int boss)
+public Action Timer_Rage_Stun(Handle timer, any boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	int victims=-1;
@@ -264,45 +271,45 @@ void Rage_Stun(const char[] ability_name, int boss)
 	float bossPosition[3], targetPosition[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
  // Initial Duration
-	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0));
+	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 1, 5.0));
  // Distance
-	float distance=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 2, -1.0));
+	float distance=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 2, -1.0));
 	if(distance<=0)
-		distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
+		distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, "rage_stun"));
  // Stun Flags
 	char flagOverrideStr[12];
-	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, sizeof(flagOverrideStr));
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, "rage_stun", 3, flagOverrideStr, sizeof(flagOverrideStr));
 	int flagOverride = ReadHexOrDecInt(flagOverrideStr);
 	if(strlen(flagOverride)==0)
 		flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
  // Slowdown
-	float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75));
+	float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 4, 0.75));
  // Sound To Boss
-	bool sounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1));
+	bool sounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, "rage_stun", 5, 1));
  // Particle Effect
 	char particleEffect[48];
-	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, "rage_stun", 6, particleEffect, sizeof(particleEffect));
 	if(strlen(particleEffect)==0)
 		particleEffect=SPOOK;
  // Ignore
-	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 0);
+	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, "rage_stun", 7, 0);
  // Friendly Fire
-	int friendly=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, -1);
+	int friendly=FF2_GetAbilityArgument(boss, this_plugin_name, "rage_stun", 8, -1);
 	if(friendly<0)
 		friendly=GetConVarInt(FindConVar("mp_friendlyfire"));
  // Remove Parachute
-	bool removeBaseJumperOnStun=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 9, GetConVarInt(cvarBaseJumperStun)));
+	bool removeBaseJumperOnStun=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, "rage_stun", 9, GetConVarInt(cvarBaseJumperStun)));
  // Max Duration
-	float maxduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 11, -1.0));
+	float maxduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 11, -1.0));
  // Add Duration
-	float addduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 12, 0.0));
+	float addduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 12, 0.0));
 	if(maxduration<=0)
 	{
 		maxduration=duration;
 		addduration=0.0;
 	}
  // Solo Rage Duration
-	float soloduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 13, -1.0));
+	float soloduration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 13, -1.0));
 	if(soloduration<=0)
 	{
 		soloduration=duration;
