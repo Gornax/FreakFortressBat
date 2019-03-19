@@ -10,7 +10,7 @@
 
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.10.5"
+#define PLUGIN_VERSION "1.11.0"
 
 public Plugin myinfo=
 {
@@ -32,6 +32,7 @@ Handle jumpHUD;
 
 bool enableSuperDuperJump[MAXPLAYERS+1];
 float UberRageCount[MAXPLAYERS+1];
+float GoombaBlockedUntil[MAXPLAYERS+1];
 int BossTeam=view_as<int>(TFTeam_Blue);
 
 ConVar cvarOldJump;
@@ -82,6 +83,7 @@ public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 	{
 		enableSuperDuperJump[client]=false;
 		UberRageCount[client]=0.0;
+		GoombaBlockedUntil[client]=0.0;
 	}
 
 	CreateTimer(0.3, Timer_GetBossTeam, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -221,6 +223,8 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 void Rage_Stun(const char[] ability_name, int boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
+	float bossPosition[3], targetPosition[3];
+	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
  // Duration
 	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0));
  // Distance
@@ -240,7 +244,7 @@ void Rage_Stun(const char[] ability_name, int boss)
  // Particle Effect
 	char particleEffect[48];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
-	if(particleEffect[0]==0)
+	if(StrEqual(particleEffect, ""))
 		particleEffect=SPOOK;
  // Ignore
 	int ignore=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 0);
@@ -249,13 +253,11 @@ void Rage_Stun(const char[] ability_name, int boss)
 	if(friendly<0)
 		friendly=GetConVarInt(FindConVar("mp_friendlyfire"));
  // Remove Parachute
-	bool removeBaseJumperOnStun=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 8, GetConVarInt(cvarBaseJumperStun)));
+	bool removeBaseJumperOnStun=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 9, GetConVarInt(cvarBaseJumperStun)));
 
-	float bossPosition[3], targetPosition[3];
-	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
 	for(int target=1; target<=MaxClients; target++)
 	{
-		if(IsClientInGame(target) && IsPlayerAlive(target) && friendly==0 ? GetClientTeam(target)!=BossTeam : target!=client)
+		if(IsClientInGame(target) && IsPlayerAlive(target) && ((friendly==0 && GetClientTeam(target)!=BossTeam) || target!=client))
 		{
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPosition);
 			if((!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) || (ignore>0 && ignore!=2)) && (!TF2_IsPlayerInCondition(target, TFCond_MegaHeal) || ignore>1) && GetVectorDistance(bossPosition, targetPosition)<=distance)
@@ -301,7 +303,7 @@ void Rage_StunSentry(const char[] ability_name, int boss)
  // Particle Effect
 	char particleEffect[48];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
-	if(particleEffect[0]==0)
+	if(StrEqual(particleEffect, ""))
 		particleEffect=SPOOK;
  // Buildings
 	int buildings=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 1);
@@ -327,18 +329,80 @@ void Rage_StunSentry(const char[] ability_name, int boss)
 				GetEntPropVector(sentry, Prop_Send, "m_vecOrigin", sentryPosition);
 				if(GetVectorDistance(bossPosition, sentryPosition)<=distance)
 				{
-					SetEntProp(sentry, Prop_Send, "m_bDisabled", 1);
-					CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(sentry, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
-					CreateTimer(duration, Timer_EnableSentry, EntIndexToEntRef(sentry), TIMER_FLAG_NO_MAPCHANGE);
+					if(destory)
+						SDKHooks_TakeDamage(sentry, client, client, 9001.0, DMG_GENERIC, -1);
+					else
+					{
+						if(health!=1)
+							SDKHooks_TakeDamage(sentry, client, client, GetEntProp(sentry, Prop_Send, "m_iMaxHealth")*health, DMG_GENERIC, -1);
+						if(ammo>=0 && ammo<=1 && ammo!=1)
+							SetEntProp(sentry, Prop_Send, "m_iAmmoShells", GetEntProp(sentry, Prop_Send, "m_iAmmoShells")*ammo);
+						if(rockets>=0 && rockets<=1 && rockets!=1)
+							SetEntProp(sentry, Prop_Send, "m_iAmmoRockets", GetEntProp(sentry, Prop_Send, "m_iAmmoRockets")*rockets);
+						if(duration>0)
+						{
+							SetEntProp(sentry, Prop_Send, "m_bDisabled", 1);
+							CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(sentry, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+							CreateTimer(duration, Timer_EnableSentry, EntIndexToEntRef(sentry), TIMER_FLAG_NO_MAPCHANGE);
+						}
+					}
 				}
 			}
 		}
 	}
 	if(buildings>1 && buildings!=3 && buildings!=5)
 	{
+		int dispenser;
+		while((dispenser=FindEntityByClassname(dispenser, "obj_dispenser"))!=-1)
+		{
+			if((((GetEntProp(dispenser, Prop_Send, "m_nSkin") % 2)!=(GetClientTeam(client) % 2)) || friendly>0) && !GetEntProp(dispenser, Prop_Send, "m_bCarried") && !GetEntProp(dispenser, Prop_Send, "m_bPlacing"))
+			{
+				GetEntPropVector(dispenser, Prop_Send, "m_vecOrigin", sentryPosition);
+				if(GetVectorDistance(bossPosition, sentryPosition)<=distance)
+				{
+					if(destory)
+						SDKHooks_TakeDamage(dispenser, client, client, 9001.0, DMG_GENERIC, -1);
+					else
+					{
+						if(health!=1)
+							SDKHooks_TakeDamage(dispenser, client, client, GetEntProp(dispenser, Prop_Send, "m_iMaxHealth")*health, DMG_GENERIC, -1);
+						if(duration>0)
+						{
+							SetEntProp(dispenser, Prop_Send, "m_bDisabled", 1);
+							CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(dispenser, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+							CreateTimer(duration, Timer_EnableSentry, EntIndexToEntRef(dispenser), TIMER_FLAG_NO_MAPCHANGE);
+						}
+					}
+				}
+			}
+		}
 	}
 	if(buildings>2 && buildings!=4)
 	{
+		int teleporter;
+		while((teleporter=FindEntityByClassname(teleporter, "obj_teleporter"))!=-1)
+		{
+			if((((GetEntProp(teleporter, Prop_Send, "m_nSkin") % 2)!=(GetClientTeam(client) % 2)) || friendly>0) && !GetEntProp(teleporter, Prop_Send, "m_bCarried") && !GetEntProp(teleporter, Prop_Send, "m_bPlacing"))
+			{
+				GetEntPropVector(teleporter, Prop_Send, "m_vecOrigin", sentryPosition);
+				if(GetVectorDistance(bossPosition, sentryPosition)<=distance)
+				{
+					if(destory)
+						SDKHooks_TakeDamage(teleporter, client, client, 9001.0, DMG_GENERIC, -1);
+					else
+					{
+						if(health!=1)
+							SDKHooks_TakeDamage(teleporter, client, client, GetEntProp(teleporter, Prop_Send, "m_iMaxHealth")*health, DMG_GENERIC, -1);
+						if(duration>0)
+						{
+							SetEntProp(teleporter, Prop_Send, "m_bDisabled", 1);
+							CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(teleporter, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+							CreateTimer(duration, Timer_EnableSentry, EntIndexToEntRef(teleporter), TIMER_FLAG_NO_MAPCHANGE);
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -544,6 +608,7 @@ int Charge_Teleport(const char[] ability_name, int boss, int slot, int status)
 					TF2_StunPlayer(client, (enableSuperDuperJump ? 4.0 : 2.0), 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, target);
 				}
 
+				GoombaBlockedUntil[client]=GetEngineTime()+3.0;
 				TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
 				if(strlen(particle)>0)
 				{
@@ -750,6 +815,19 @@ public Action FF2_OnTriggerHurt(int boss, int triggerhurt, float &damage)
 	if(FF2_GetBossCharge(boss, 1)<0)
 	{
 		FF2_SetBossCharge(boss, 1, 0.0);
+	}
+	return Plugin_Continue;
+}
+
+public Action OnStomp(int attacker, int victim, float &damageMult, float &damageBonus, float &jumpPower)
+{
+	if(IsPlayerAlive(attacker) && GoombaBlockedUntil[attacker]>GetEngineTime())
+	{
+		// I'm doing it this way instead of Plugin_Handled so the boss also gets out of goomba range
+		// this method causes the boss to jump up when the 0 damage goomba happens.
+		damageMult = 0.0;
+		damageBonus = 0.0;
+		return Plugin_Changed;
 	}
 	return Plugin_Continue;
 }
