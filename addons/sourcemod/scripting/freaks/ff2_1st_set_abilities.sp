@@ -27,6 +27,16 @@ public Plugin myinfo=
 	version		=	PLUGIN_VERSION,
 };
 
+enum Operators
+{
+	Operator_None=0,
+	Operator_Add,
+	Operator_Subtract,
+	Operator_Multiply,
+	Operator_Divide,
+	Operator_Exponent,
+};
+
 #define FLAG_ONSLOWMO		(1<<0)
 #define FLAG_SLOWMOREADYCHANGE	(1<<1)
 
@@ -40,7 +50,7 @@ Handle OnHaleRage=INVALID_HANDLE;
 
 ConVar cvarTimeScale;
 ConVar cvarCheats;
-BossTeam=view_as<int>(TFTeam_Blue);
+int BossTeam=view_as<int>(TFTeam_Blue);
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -120,7 +130,7 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-public OnClientDisconnect(int client)
+public void OnClientDisconnect(int client)
 {
 	FF2Flags[client]=0;
 	if(CloneOwnerIndex[client]!=-1)
@@ -145,7 +155,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 		{
 			Action action=Plugin_Continue;
 			Call_StartForward(OnHaleRage);
-			float distance=FF2_GetRageDist(boss, this_plugin_name, ability_name);
+			float distance=view_as<float>(FF2_GetRageDist(boss, this_plugin_name, ability_name));
 			float newDistance=distance;
 			Call_PushFloatRef(newDistance);
 			Call_Finish(action);
@@ -165,7 +175,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 		if(status>0)
 		{
 			int client=GetClientOfUserId(FF2_GetBossUserId(boss));
-			float charge=FF2_GetBossCharge(boss, 0);
+			float charge=view_as<float>(FF2_GetBossCharge(boss, 0));
 			SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", 100.0);
 			TF2_AddCondition(client, TFCond_Charging, 0.25);
 			if(charge>10.0 && charge<90.0)
@@ -211,7 +221,7 @@ void Rage_Clone(const char[] ability_name, int boss)
 	char model[PLATFORM_MAX_PATH];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, model, sizeof(model));
 	int class=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 4);
-	float ratio=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 5, 0.0);
+	float ratio=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 5, 0.0));
 	char classname[64]="tf_weapon_bottle";
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, classname, sizeof(classname));
 	int index=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 7, 191);
@@ -219,7 +229,6 @@ void Rage_Clone(const char[] ability_name, int boss)
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 8, attributes, sizeof(attributes));
 	int ammo=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 9, -1);
 	int clip=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 10, -1);
-	int health=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 11, 0);
 
 	float position[3], velocity[3];
 	GetEntPropVector(GetClientOfUserId(FF2_GetBossUserId(boss)), Prop_Data, "m_vecOrigin", position);
@@ -242,7 +251,7 @@ void Rage_Clone(const char[] ability_name, int boss)
 		if(IsClientInGame(target))
 		{
 			TFTeam team=view_as<TFTeam>(GetClientTeam(target));
-			if(team>TFTeam_Spectator && team!=TFTeam_Blue)
+			if(team>TFTeam_Spectator && team!=BossTeam)
 			{
 				if(IsPlayerAlive(target))
 				{
@@ -257,6 +266,7 @@ void Rage_Clone(const char[] ability_name, int boss)
 		}
 	}
 
+	int health=ParseFormula(boss, FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 11, 0), 0, alive);
 	int totalMinions=(ratio ? RoundToCeil(alive*ratio) : MaxClients);  //If ratio is 0, use MaxClients instead
 	int config=GetRandomInt(0, maxKV-1);
 	int clone, temp;
@@ -365,6 +375,14 @@ void Rage_Clone(const char[] ability_name, int boss)
 		}
 	}
 
+	while((entity=FindEntityByClassname(entity, "tf_wearable_razorback"))!=-1)
+	{
+		if((owner=GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"))<=MaxClients && owner>0 && GetClientTeam(owner)==BossTeam)
+		{
+			TF2_RemoveWearable(owner, entity);
+		}
+	}
+	
 	while((entity=FindEntityByClassname(entity, "tf_wearable_demoshield"))!=-1)
 	{
 		if((owner=GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"))<=MaxClients && owner>0 && GetClientTeam(owner)==BossTeam)
@@ -415,7 +433,7 @@ public Action SaveMinion(int client, int &attacker, int &inflictor, float &damag
 		char edict[64];
 		if(GetEntityClassname(attacker, edict, sizeof(edict)) && !strcmp(edict, "trigger_hurt", false))
 		{
-			int target
+			int target;
 			float position[3];
 			bool otherTeamIsAlive;
 			for(int clone=1; clone<=MaxClients; clone++)
@@ -486,9 +504,9 @@ void Rage_Bow(int boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-	char attributes;
+	char attributes[64];
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, "special_cbs_multimelee", 1, attributes, sizeof(attributes));
-	if(attributes[0]=='\0')
+	if(strlen(attributes)==0)
 		attributes="6 ; 0.5 ; 37 ; 0.0 ; 280 ; 19";
 	int weapon=SpawnWeapon(client, "tf_weapon_compound_bow", 1005, 101, 5, attributes);
 	SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
@@ -586,8 +604,8 @@ public Action Timer_Rage_Explosive_Dance(Handle timer, any boss)
 void Rage_Slowmo(int boss, const char[] ability_name)
 {
 	FF2_SetFF2flags(boss, FF2_GetFF2flags(boss)|FF2FLAG_CHANGECVAR);
-	SetConVarFloat(cvarTimeScale, FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 2, 0.1));
-	float duration=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 1.0)+1.0;
+	SetConVarFloat(cvarTimeScale, view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 2, 0.1)));
+	float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 1.0))+1.0;
 	SlowMoTimer=CreateTimer(duration, Timer_StopSlowMo, boss, TIMER_FLAG_NO_MAPCHANGE);
 	FF2Flags[boss]=FF2Flags[boss]|FLAG_SLOWMOREADYCHANGE|FLAG_ONSLOWMO;
 	UpdateClientCheatValue(1);
@@ -629,7 +647,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 	if(buttons & IN_ATTACK)
 	{
 		FF2Flags[boss]&=~FLAG_SLOWMOREADYCHANGE;
-		CreateTimer(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_matrix_attack", 3, 0.2), Timer_SlowMoChange, boss, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_matrix_attack", 3, 0.2)), Timer_SlowMoChange, boss, TIMER_FLAG_NO_MAPCHANGE);
 
 		float bossPosition[3], endPosition[3], eyeAngles[3];
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
@@ -743,7 +761,7 @@ public Action OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 					GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
 					position[2]+=20;
 					TeleportEntity(prop, position, NULL_VECTOR, NULL_VECTOR);
-					float duration=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "special_dropprop", 2, 0.0);
+					float duration=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "special_dropprop", 2, 0.0));
 					if(duration>0.5)
 					{
 						CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(prop), TIMER_FLAG_NO_MAPCHANGE);
@@ -757,9 +775,9 @@ public Action OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 			if(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon")==GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee))
 			{
 				TF2_RemoveWeaponSlot(attacker, TFWeaponSlot_Melee);
-				char attributes;
+				char attributes[64];
 				FF2_GetAbilityArgumentString(boss, this_plugin_name, "special_cbs_multimelee", 1, attributes, sizeof(attributes));
-				if(attributes[0]=='\0')
+				if(strlen(attributes)==0)
 					attributes="68 ; 2 ; 2 ; 3.1 ; 275 ; 1";
 				int weapon;
 				switch(GetRandomInt(0, 2))
@@ -909,4 +927,173 @@ stock void UpdateClientCheatValue(int value)
 			SendConVarValue(client, cvarCheats, value ? "1" : "0");
 		}
 	}
+}
+
+stock int Operate(Handle sumArray, int &bracket, float value, Handle _operator)
+{
+	float sum=GetArrayCell(sumArray, bracket);
+	switch(GetArrayCell(_operator, bracket))
+	{
+		case Operator_Add:
+		{
+			SetArrayCell(sumArray, bracket, sum+value);
+		}
+		case Operator_Subtract:
+		{
+			SetArrayCell(sumArray, bracket, sum-value);
+		}
+		case Operator_Multiply:
+		{
+			SetArrayCell(sumArray, bracket, sum*value);
+		}
+		case Operator_Divide:
+		{
+			if(!value)
+			{
+				LogError("[FF2 Bosses] Detected a divide by 0 for rage_clone!");
+				bracket=0;
+				return;
+			}
+			SetArrayCell(sumArray, bracket, sum/value);
+		}
+		case Operator_Exponent:
+		{
+			SetArrayCell(sumArray, bracket, Pow(sum, value));
+		}
+		default:
+		{
+			SetArrayCell(sumArray, bracket, value);  //This means we're dealing with a constant
+		}
+	}
+	SetArrayCell(_operator, bracket, Operator_None);
+}
+
+stock void OperateString(Handle sumArray, int &bracket, char[] value, int size, Handle _operator)
+{
+	if(!StrEqual(value, ""))  //Make sure 'value' isn't blank
+	{
+		Operate(sumArray, bracket, StringToFloat(value), _operator);
+		strcopy(value, size, "");
+	}
+}
+
+public int ParseFormula(int boss, const char[] key, int defaultValue, int playing)
+{
+	char formula[1024], bossName[64];
+	FF2_GetBossSpecial(boss, bossName, sizeof(bossName));
+	strcopy(formula, sizeof(formula), key);
+	int size=1;
+	int matchingBrackets;
+	for(int i; i<=strlen(formula); i++)  //Resize the arrays once so we don't have to worry about it later on
+	{
+		if(formula[i]=='(')
+		{
+			if(!matchingBrackets)
+			{
+				size++;
+			}
+			else
+			{
+				matchingBrackets--;
+			}
+		}
+		else if(formula[i]==')')
+		{
+			matchingBrackets++;
+		}
+	}
+
+	Handle sumArray=CreateArray(_, size), _operator=CreateArray(_, size);
+	int bracket;  //Each bracket denotes a separate sum (within parentheses).  At the end, they're all added together to achieve the actual sum
+	SetArrayCell(sumArray, 0, 0.0);  //TODO:  See if these can be placed naturally in the loop
+	SetArrayCell(_operator, bracket, Operator_None);
+
+	char character[2], value[16];
+	for(int i; i<=strlen(formula); i++)
+	{
+		character[0]=formula[i];  //Find out what the next char in the formula is
+		switch(character[0])
+		{
+			case ' ', '\t':  //Ignore whitespace
+			{
+				continue;
+			}
+			case '(':
+			{
+				bracket++;  //We've just entered a new parentheses so increment the bracket value
+				SetArrayCell(sumArray, bracket, 0.0);
+				SetArrayCell(_operator, bracket, Operator_None);
+			}
+			case ')':
+			{
+				OperateString(sumArray, bracket, value, sizeof(value), _operator);
+				if(GetArrayCell(_operator, bracket)!=Operator_None)  //Something like (5*)
+				{
+					LogError("[FF2 Bosses] %s's %s formula for rage_clone has an invalid operator at character %i", bossName, key, i+1);
+					CloseHandle(sumArray);
+					CloseHandle(_operator);
+					return defaultValue;
+				}
+
+				if(--bracket<0)  //Something like (5))
+				{
+					LogError("[FF2 Bosses] %s's %s formula for rage_clone has an unbalanced parentheses at character %i", bossName, key, i+1);
+					CloseHandle(sumArray);
+					CloseHandle(_operator);
+					return defaultValue;
+				}
+
+				Operate(sumArray, bracket, GetArrayCell(sumArray, bracket+1), _operator);
+			}
+			case '\0':  //End of formula
+			{
+				OperateString(sumArray, bracket, value, sizeof(value), _operator);
+			}
+			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.':
+			{
+				StrCat(value, sizeof(value), character);  //Constant?  Just add it to the current value
+			}
+			case 'n', 'x':  //n and x denote player variables
+			{
+				Operate(sumArray, bracket, float(playing), _operator);
+			}
+			case '+', '-', '*', '/', '^':
+			{
+				OperateString(sumArray, bracket, value, sizeof(value), _operator);
+				switch(character[0])
+				{
+					case '+':
+					{
+						SetArrayCell(_operator, bracket, Operator_Add);
+					}
+					case '-':
+					{
+						SetArrayCell(_operator, bracket, Operator_Subtract);
+					}
+					case '*':
+					{
+						SetArrayCell(_operator, bracket, Operator_Multiply);
+					}
+					case '/':
+					{
+						SetArrayCell(_operator, bracket, Operator_Divide);
+					}
+					case '^':
+					{
+						SetArrayCell(_operator, bracket, Operator_Exponent);
+					}
+				}
+			}
+		}
+	}
+
+	int result=RoundFloat(GetArrayCell(sumArray, 0));
+	CloseHandle(sumArray);
+	CloseHandle(_operator);
+	if(result<=0)
+	{
+		LogError("[FF2 Bosses] %s has an invalid %s formula for rage_clone, using default health!", bossName, key);
+		return defaultValue;
+	}
+	return result;
 }
