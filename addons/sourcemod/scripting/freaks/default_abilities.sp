@@ -193,7 +193,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 		if(flagOverride==0)
 			flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
 	// Slowdown
-		float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.75));
+		float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.0));
 	// Sound To Client
 		bool sounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1));
 	// Particle Effect
@@ -284,7 +284,7 @@ public Action Timer_Rage_Stun(Handle timer, any boss)
 	if(flagOverride==0)
 		flagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
  // Slowdown
-	float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 4, 0.75));
+	float slowdown=view_as<float>(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "rage_stun", 4, 0.0));
  // Sound To Boss
 	bool sounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, "rage_stun", 5, 1));
  // Particle Effect
