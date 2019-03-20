@@ -230,7 +230,7 @@ void Rage_Clone(const char[] ability_name, int boss)
 	int ammo=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 9, -1);
 	int clip=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 10, -1);
 	char healthformula[768];
-	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 11, healthformula, sizeof(healthformula))
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 11, healthformula, sizeof(healthformula));
 
 	float position[3], velocity[3];
 	GetEntPropVector(GetClientOfUserId(FF2_GetBossUserId(boss)), Prop_Data, "m_vecOrigin", position);
@@ -517,7 +517,7 @@ void Rage_Bow(int boss)
 	int otherTeamAlivePlayers;
 	for(int target=1; target<=MaxClients; target++)
 	{
-		if(IsClientInGame(target) && TFTeam:GetClientTeam(target)==team && IsPlayerAlive(target))
+		if(IsClientInGame(target) && view_as<TFTeam>(GetClientTeam(target))==team && IsPlayerAlive(target))
 		{
 			otherTeamAlivePlayers++;
 		}
@@ -615,7 +615,7 @@ void Rage_Slowmo(int boss, const char[] ability_name)
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(client)
 	{
-		CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, BossTeam==_:TFTeam_Blue ? "scout_dodge_blue" : "scout_dodge_red", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, BossTeam==view_as<int>(TFTeam_Blue) ? "scout_dodge_blue" : "scout_dodge_red", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	EmitSoundToAll(SOUND_SLOW_MO_START, _, _, _, _, _, _, _, _, _, false);
@@ -813,7 +813,7 @@ public Action OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 				FF2_SetFF2flags(target, FF2_GetFF2flags(target) & ~FF2FLAG_CLASSTIMERDISABLED);
 				if(IsClientInGame(target) && GetClientTeam(target)==BossTeam)
 				{
-					ChangeClientTeam(target, (BossTeam==_:TFTeam_Blue) ? (_:TFTeam_Red) : (_:TFTeam_Blue));
+					ChangeClientTeam(target, (BossTeam==view_as<int>(TFTeam_Blue)) ? (view_as<int>(TFTeam_Red)) : (view_as<int>(TFTeam_Blue)));
 				}
 			}
 		}
@@ -823,7 +823,7 @@ public Action OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 	{
 		CloneOwnerIndex[client]=-1;
 		FF2_SetFF2flags(client, FF2_GetFF2flags(client) & ~FF2FLAG_CLASSTIMERDISABLED);
-		ChangeClientTeam(client, (BossTeam==_:TFTeam_Blue) ? (_:TFTeam_Red) : (_:TFTeam_Blue));
+		ChangeClientTeam(client, (BossTeam==view_as<int>(TFTeam_Blue)) ? (view_as<int>(TFTeam_Red)) : (view_as<int>(TFTeam_Blue)));
 	}
 	return Plugin_Continue;
 }
