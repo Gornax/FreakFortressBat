@@ -363,7 +363,8 @@ public Action Timer_Rage_Stun(Handle timer, any boss)
 					CPrintToChatAll("{olive}[FF2]{default} %t", "Solo Rage", bossName);
 				}
 				TF2_StunPlayer(target, duration, slowdown, flagOverride, sounds ? client : 0);
-				CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+				if(strlen(particleEffect)>1)
+					CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, particleEffect, 75.0)), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
