@@ -229,6 +229,8 @@ void Rage_Clone(const char[] ability_name, int boss)
 	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 8, attributes, sizeof(attributes));
 	int ammo=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 9, -1);
 	int clip=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 10, -1);
+	char healthformula[768];
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 11, healthformula, sizeof(healthformula))
 
 	float position[3], velocity[3];
 	GetEntPropVector(GetClientOfUserId(FF2_GetBossUserId(boss)), Prop_Data, "m_vecOrigin", position);
@@ -251,7 +253,7 @@ void Rage_Clone(const char[] ability_name, int boss)
 		if(IsClientInGame(target))
 		{
 			TFTeam team=view_as<TFTeam>(GetClientTeam(target));
-			if(team>TFTeam_Spectator && team!=BossTeam)
+			if(team>TFTeam_Spectator && team!=view_as<TFTeam>(BossTeam))
 			{
 				if(IsPlayerAlive(target))
 				{
@@ -266,7 +268,7 @@ void Rage_Clone(const char[] ability_name, int boss)
 		}
 	}
 
-	int health=ParseFormula(boss, FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 11, 0), 0, alive);
+	int health=ParseFormula(boss, healthformula, 0, alive);
 	int totalMinions=(ratio ? RoundToCeil(alive*ratio) : MaxClients);  //If ratio is 0, use MaxClients instead
 	int config=GetRandomInt(0, maxKV-1);
 	int clone, temp;
@@ -563,7 +565,7 @@ public Action Timer_Rage_Explosive_Dance(Handle timer, any boss)
 	if(count<=35 && IsPlayerAlive(client))
 	{
 		SetEntityMoveType(boss, MOVETYPE_NONE);
-		float bossPosition[3], Float:explosionPosition[3];
+		float bossPosition[3], explosionPosition[3];
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
 		explosionPosition[2]=bossPosition[2];
 		for(int i; i<5; i++)
