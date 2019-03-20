@@ -507,7 +507,7 @@ void Rage_Bow(int boss)
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
 	char attributes[64];
-	FF2_GetAbilityArgumentString(boss, this_plugin_name, "special_cbs_multimelee", 1, attributes, sizeof(attributes));
+	FF2_GetAbilityArgumentString(boss, this_plugin_name, "rage_cbs_bowrage", 1, attributes, sizeof(attributes));
 	if(strlen(attributes)==0)
 		attributes="6 ; 0.5 ; 37 ; 0.0 ; 280 ; 19";
 	int weapon=SpawnWeapon(client, "tf_weapon_compound_bow", 1005, 101, 5, attributes);
