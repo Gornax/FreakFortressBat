@@ -269,7 +269,7 @@ native int FF2_GetAbilityArgument(int boss, const char[] pluginName, const char[
  * @param defValue 		Returns if argument is not defined
  * @return				Value of argument
  */
-native int FF2_GetAbilityArgumentFloat(int boss, const char[] plugin_name, const char[] ability_name, int argument, float defValue=0.0);
+native float FF2_GetAbilityArgumentFloat(int boss, const char[] plugin_name, const char[] ability_name, int argument, float defValue=0.0);
 
 /**
  * Gets the string value of an ability argument
