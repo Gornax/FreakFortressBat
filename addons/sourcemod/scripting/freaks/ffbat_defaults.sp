@@ -1,6 +1,8 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <sdktools>
+#include <sdkhooks>
 #include <tf2items>
 #include <tf2_stocks>
 #include <freak_fortress_2>
@@ -10,14 +12,14 @@
 
 #define MAJOR_REVISION	"0"
 #define MINOR_REVISION	"0"
-#define STABLE_REVISION	"1"
+#define STABLE_REVISION	"2"
 #define PLUGIN_VERSION MAJOR_REVISION..."."...MINOR_REVISION..."."...STABLE_REVISION
 
 #define PROJECTILE	"model_projectile_replace"
 #define OBJECTS		"spawn_many_objects_on_kill"
 #define OBJECTS_DEATH	"spawn_many_objects_on_death"
 
-new BossTeam=_:TFTeam_Blue;
+int BossTeam=view_as<int>(TFTeam_Blue);
 
 public Plugin myinfo=
 {
@@ -82,24 +84,24 @@ public Action Timer_Disable_Anims(Handle timer)
 	return Plugin_Continue;
 }
 
-public OnPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
+public int OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 {
-	new client=GetClientOfUserId(GetEventInt(event, "userid"));
-	new attacker=GetClientOfUserId(GetEventInt(event, "attacker"));
+	int client=GetClientOfUserId(GetEventInt(event, "userid"));
+	int attacker=GetClientOfUserId(GetEventInt(event, "attacker"));
 	if(!client || !attacker || !IsClientInGame(client) || !IsClientInGame(attacker))
 	{
 		return;
 	}
 
-	new boss=FF2_GetBossIndex(attacker);
+	int boss=FF2_GetBossIndex(attacker);
 	if(boss>=0 && FF2_HasAbility(boss, this_plugin_name, OBJECTS))
 	{
-		decl String:classname[PLATFORM_MAX_PATH], String:model[PLATFORM_MAX_PATH];
+		char classname[PLATFORM_MAX_PATH], model[PLATFORM_MAX_PATH];
 		FF2_GetAbilityArgumentString(boss, this_plugin_name, OBJECTS, 1, classname, sizeof(classname));
 		FF2_GetAbilityArgumentString(boss, this_plugin_name, OBJECTS, 2, model, sizeof(model));
-		new skin=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS, 3);
-		new count=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS, 4, 14);
-		new Float:distance=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, OBJECTS, 5, 30.0);
+		int skin=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS, 3);
+		int count=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS, 4, 14);
+		float distance=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, OBJECTS, 5, 30.0);
 		SpawnManyObjects(classname, client, model, skin, count, distance);
 		return;
 	}
@@ -107,12 +109,12 @@ public OnPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	boss=FF2_GetBossIndex(client);
 	if(boss>=0 && FF2_HasAbility(boss, this_plugin_name, OBJECTS_DEATH))
 	{
-		decl String:classname[PLATFORM_MAX_PATH], String:model[PLATFORM_MAX_PATH];
+		char classname[PLATFORM_MAX_PATH], model[PLATFORM_MAX_PATH];
 		FF2_GetAbilityArgumentString(boss, this_plugin_name, OBJECTS_DEATH, 1, classname, sizeof(classname));
 		FF2_GetAbilityArgumentString(boss, this_plugin_name, OBJECTS_DEATH, 2, model, sizeof(model));
-		new skin=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS_DEATH, 3);
-		new count=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS_DEATH, 4, 14);
-		new Float:distance=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, OBJECTS_DEATH, 5, 30.0);
+		int skin=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS_DEATH, 3);
+		int count=FF2_GetAbilityArgument(boss, this_plugin_name, OBJECTS_DEATH, 4, 14);
+		float distance=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, OBJECTS_DEATH, 5, 30.0);
 		SpawnManyObjects(classname, client, model, skin, count, distance);
 		return;
 	}
@@ -126,7 +128,7 @@ public OnEntityCreated(int entity, const char[] classname)
 	}
 }
 
-public OnProjectileSpawned(int entity)
+public void OnProjectileSpawned(int entity)
 {
 	int client=GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 	if(client>0 && client<=MaxClients && IsClientInGame(client))
@@ -165,7 +167,7 @@ int SpawnManyObjects(char[] classname, int client, char[] model, int skin=0, int
 		return;
 	}
 
-	float position[3], Float:velocity[3];
+	float position[3], velocity[3];
 	float angle[]={90.0, 0.0, 0.0};
 	GetClientAbsOrigin(client, position);
 	position[2]+=distance;
