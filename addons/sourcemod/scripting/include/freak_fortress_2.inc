@@ -30,7 +30,7 @@
  * @return	False if FF2 is disabled
  *			True if FF2 is enabled
  */
-native int FF2_IsFF2Enabled();
+native bool FF2_IsFF2Enabled();
 
 /**
  * Gets the version of FF2 running on the server
@@ -38,7 +38,7 @@ native int FF2_IsFF2Enabled();
  * @param version   An array of size 3 that will contain the major, minor, and stable version numbers respectively
  * @return			True if the server is running a dev version of FF2, false otherwise
  */
-native int FF2_GetFF2Version(version[]=0);
+native bool FF2_GetFF2Version(version[]=0);
 
 /**
  * Gets the version of the FF2 fork running on the server
@@ -46,7 +46,7 @@ native int FF2_GetFF2Version(version[]=0);
  * @param version   An array of size 3 that will contain the major, minor, and stable version numbers respectively
  * @return			True if the server has a sub name defined, false otherwise
  */
-native int FF2_GetForkVersion(fversion[]=0);
+native bool FF2_GetForkVersion(fversion[]=0);
 
 /**
  * Gets current round state
@@ -89,7 +89,7 @@ native int FF2_GetBossTeam();
  *							1 - "boss" parameter means number of Boss in characters.cfg-1
  * @return					True if boss exists, false if not
  */
-native int FF2_GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int bossMeaning=0);
+native bool FF2_GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int bossMeaning=0);
 
 /**
  * Gets the current health value of the Boss
@@ -106,7 +106,7 @@ native int FF2_GetBossHealth(int boss=0);
  * @param health	New health value
  * @noreturn
  */
-native int FF2_SetBossHealth(int boss, int health);
+native void FF2_SetBossHealth(int boss, int health);
 
 /**
  * Gets the max health of the Boss
@@ -123,7 +123,7 @@ native int FF2_GetBossMaxHealth(int boss=0);
  * @param health	New max health value
  * @noreturn
  */
-native int FF2_SetBossMaxHealth(int boss, int health);
+native void FF2_SetBossMaxHealth(int boss, int health);
 
 /**
  * Gets the current number of lives of the Boss
@@ -140,7 +140,7 @@ native int FF2_GetBossLives(int boss);
  * @param lives		New number of lives
  * @noreturn
  */
-native int FF2_SetBossLives(int boss, int lives);
+native void FF2_SetBossLives(int boss, int lives);
 
 /**
  * Gets the max number of lives of the Boss
@@ -157,7 +157,7 @@ native int FF2_GetBossMaxLives(int boss);
  * @param lives		New max number of lives
  * @noreturn
  */
-native int FF2_SetBossMaxLives(int boss, int lives);
+native void FF2_SetBossMaxLives(int boss, int lives);
 
 /**
  * Gets the charge meter value of the Boss
@@ -182,7 +182,7 @@ native int FF2_GetBossCharge(int boss, int slot);
  * @param value		New value of charge
  * @noreturn
  */
-native int FF2_SetBossCharge(int boss, int slot, float value);
+native void FF2_SetBossCharge(int boss, int slot, float value);
 
 /**
  * Gets how much damage is needed in order to activate the rage of the current boss
@@ -199,7 +199,7 @@ native int FF2_GetBossRageDamage(int boss);
  * @param damage	New damage value
  * @noreturn
  */
-native int FF2_SetBossRageDamage(int boss, int damage);
+native void FF2_SetBossRageDamage(int boss, int damage);
 
 /**
  * Gets damage dealt by this client
@@ -245,7 +245,7 @@ native int FF2_HasAbility(int boss, const char[] pluginName, const char[] abilit
  *							2 - by reload button
  * @noreturn
  */
-native int FF2_DoAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int buttonMode=0);
+native void FF2_DoAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int buttonMode=0);
 
 /**
  * Gets the integer value of an ability argument
@@ -282,7 +282,7 @@ native int FF2_GetAbilityArgumentFloat(int boss, const char[] plugin_name, const
  * @param bufferLength	Length of buffer string
  * @noreturn
  */
-native int FF2_GetAbilityArgumentString(int boss, const char[] pluginName, const char[] abilityName, int argument, char[] buffer, int bufferLength);
+native void FF2_GetAbilityArgumentString(int boss, const char[] pluginName, const char[] abilityName, int argument, char[] buffer, int bufferLength);
 
 /**
  * Starts a random Boss sound from its config file
@@ -294,7 +294,7 @@ native int FF2_GetAbilityArgumentString(int boss, const char[] pluginName, const
  * @param slot			Only for "sound_ability" - slot of ability
  * @return				True if sound has been found, false otherwise
  */
-native int FF2_RandomSound(const char[] keyvalue, char[] buffer, int bufferLength, int boss=0, int slot=0);
+native bool FF2_RandomSound(const char[] keyvalue, char[] buffer, int bufferLength, int boss=0, int slot=0);
 
 /**
  * Starts the Boss's music for the specified clients
@@ -302,7 +302,7 @@ native int FF2_RandomSound(const char[] keyvalue, char[] buffer, int bufferLengt
  * @param client	Client's index (0 for all clients)
  * @noreturn
  */
-native int FF2_StartMusic(int client=0);
+native void FF2_StartMusic(int client=0);
 
 /**
  * Stops the Boss's music for the specified clients
@@ -310,7 +310,7 @@ native int FF2_StartMusic(int client=0);
  * @param client	Client's index (0 for all clients)
  * @noreturn
  */
-native int FF2_StopMusic(int client=0);
+native void FF2_StopMusic(int client=0);
 
 /**
  * Gets a Boss's KV handle
@@ -337,7 +337,7 @@ native int FF2_GetFF2flags(int client);
  * @param flags		New flag values
  * @noreturn
  */
-native int FF2_SetFF2flags(int client, int flags);
+native void FF2_SetFF2flags(int client, int flags);
 
 /**
  * Gets a client's queue points
@@ -354,7 +354,7 @@ native int FF2_GetQueuePoints(int client);
  * @param value		New value of client's queue points
  * @noreturn
  */
-native int FF2_SetQueuePoints(int client, int value);
+native void FF2_SetQueuePoints(int client, int value);
 
 /**
  * Gets a client's glow timer
@@ -372,13 +372,13 @@ native int FF2_GetClientGlow(int client);
  * @param time2		New value of glow timer
  * @noreturn
  */
-native int FF2_SetClientGlow(int client, float time1, float time2=-1.0);
+native void FF2_SetClientGlow(int client, float time1, float time2=-1.0);
 
 /**
  * Returns whether or not debug is enabled
  * @return			True if enabled, false otherwise
  */
-native int FF2_Debug();
+native bool FF2_Debug();
 
 /**
  * FF2_ONABILITY IS KNOWN TO BE BUGGED AND WILL NOT BE FIXED TO PRESERVE BACKWARDS COMPATABILITY.  DO NOT USE IT.
@@ -478,7 +478,7 @@ forward Action FF2_OnAlivePlayersChanged(int players, int bosses);
  * @param clip		Clip
  * @noreturn
  */
-stock int FF2_SetAmmo(int client, int weapon, int ammo=-1, int clip=-1)
+stock void FF2_SetAmmo(int client, int weapon, int ammo=-1, int clip=-1)
 {
 	if(IsValidEntity(weapon))
 	{
@@ -508,7 +508,7 @@ stock int FF2_SetAmmo(int client, int weapon, int ammo=-1, int clip=-1)
  *
  * Uses the same params and return values as ShowSyncHudText
  */
-stock int FF2_ShowSyncHudText(int client, Handle sync, const char[] buffer, any ...)
+stock void FF2_ShowSyncHudText(int client, Handle sync, const char[] buffer, any ...)
 {
 	if(!(FF2_GetFF2flags(client) & FF2FLAG_HUDDISABLED) && !(GetClientButtons(client) & IN_SCORE))
 	{
@@ -525,7 +525,7 @@ stock int FF2_ShowSyncHudText(int client, Handle sync, const char[] buffer, any 
  *
  * Uses the same params and return values as ShowHudText
  */
-stock int FF2_ShowHudText(int client, int channel, const char[] buffer, any ...)
+stock void FF2_ShowHudText(int client, int channel, const char[] buffer, any ...)
 {
 	if(!(FF2_GetFF2flags(client) & FF2FLAG_HUDDISABLED) && !(GetClientButtons(client) & IN_SCORE))
 	{
@@ -543,7 +543,7 @@ stock int FF2_ShowHudText(int client, int channel, const char[] buffer, any ...)
  * @param any:...	Formatting rules
  * @noreturn
  */
-stock int Debug(char[] buffer, any ...)
+stock void Debug(char[] buffer, any ...)
 {
 	if(FF2_Debug())
 	{
