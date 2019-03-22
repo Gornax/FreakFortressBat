@@ -162,6 +162,7 @@ int Incoming[MAXPLAYERS+1];
 int Damage[MAXPLAYERS+1];
 int curHelp[MAXPLAYERS+1];
 int uberTarget[MAXPLAYERS+1];
+int hadshield[MAXPLAYERS+1];
 int shield[MAXPLAYERS+1];
 int detonations[MAXPLAYERS+1];
 bool playBGM[MAXPLAYERS+1]=true;
@@ -1740,6 +1741,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_SetQueuePoints", Native_SetQueuePoints);
 	CreateNative("FF2_GetClientGlow", Native_GetClientGlow);
 	CreateNative("FF2_SetClientGlow", Native_SetClientGlow);
+	CreateNative("FF2_GetClientShield", Native_GetClientShield);
+	CreateNative("FF2_SetClientShield", Native_SetClientShield);
 	CreateNative("FF2_Debug", Native_Debug);
 
 	PreAbility=CreateGlobalForward("FF2_PreAbility", ET_Hook, Param_Cell, Param_String, Param_String, Param_Cell, Param_CellByRef);  //Boss, plugin name, ability name, slot, enabled
@@ -3998,6 +4001,7 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 		else if(IsValidClient(boss))  //Boss here is actually a client index
 		{
 			SetClientGlow(boss, 0.0, 0.0);
+			hadshield[boss]=0;
 			shield[boss]=0;
 			detonations[boss]=0;
 		}
@@ -6763,6 +6767,7 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	}
 
 	SetEntityRenderColor(client, 255, 255, 255, 255);
+	hadshield[client]=0;
 	shield[client]=0;
 	int index=-1;
 	int[] civilianCheck = new int[MaxClients+1];
@@ -6811,6 +6816,7 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	}
 
 	int playerBack=FindPlayerBack(client, 57);  //Razorback
+	hadshield[client]=IsValidEntity(playerBack) ? playerBack : 0;
 	shield[client]=IsValidEntity(playerBack) ? playerBack : 0;
 	if(IsValidEntity(FindPlayerBack(client, 642)))  //Cozy Camper
 	{
@@ -6837,6 +6843,7 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	{
 		if(GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity")==client && !GetEntProp(entity, Prop_Send, "m_bDisguiseWearable"))
 		{
+			hadshield[client]=entity;
 			shield[client]=entity;
 			DebugMsg(0, "Enabled Shield");
 		}
@@ -13379,14 +13386,25 @@ public int Native_SetClientGlow(Handle plugin, int numParams)
 	SetClientGlow(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
 
-public int Native_GetAlivePlayers(Handle plugin, int numParams)
+public int Native_GetClientShield(Handle plugin, int numParams)
 {
-	return RedAlivePlayers;
+	if(hadshield[client])
+	{
+		if(shield[client])
+		{
+			if(GetConVarInt(cvarShieldType)==4)
+				return RoundToFloor(shieldHP[client]*0.2));
+			else
+				return RoundToFloor(shieldHP[client]*0.1));
+		}
+		return 0;
+	}
+	return -1;
 }
 
-public int Native_GetBossPlayers(Handle plugin, int numParams)
+public int Native_SetClientShield(Handle plugin, int numParams)
 {
-	return BlueAlivePlayers;
+	// TODO
 }
 
 public int Native_Debug(Handle plugin, int numParams)
