@@ -79,7 +79,6 @@ int FF2Flags[MAXPLAYERS+1];
 int CloneOwnerIndex[MAXPLAYERS+1]=-1;
 
 //	Instant Teleport
-bool Tsounds;
 float Tslowdown;
 float Tstun;
 int TflagOverride;
@@ -147,7 +146,6 @@ public void OnMapStart()
 
 public void OnAllPluginsLoaded()
 {
-	cvarOldJump=FindConVar("ff2_oldjump");  //Created in freak_fortress_2.sp
 	cvarBaseJumperStun=FindConVar("ff2_base_jumper_stun");
 	if(!Outdated)
 		cvarSoloShame=FindConVar("ff2_solo_shame");
@@ -155,6 +153,7 @@ public void OnAllPluginsLoaded()
 
 public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ability_name, int status)
 {
+	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	int slot=FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 0);
 	if(!slot)  //Rage
 	{
@@ -189,7 +188,6 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	}
 	else if(!strcmp(ability_name, "rage_uber"))
 	{
-		int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 		TF2_AddCondition(client, TFCond_Ubercharged, FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0));
 		SetEntProp(client, Prop_Data, "m_takedamage", 0);
 		CreateTimer(FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 5.0), Timer_StopUber, boss, TIMER_FLAG_NO_MAPCHANGE);
@@ -204,7 +202,6 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	}
 	else if(!strcmp(ability_name, "rage_instant_teleport"))
 	{
-		int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 		float position[3];
 		bool otherTeamIsAlive;
 	// Stun Duration
@@ -220,7 +217,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	// Slowdown
 		Tslowdown=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 4, 0.0);
 	// Sound To Client
-		Tsounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1));
+		bool sounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1));
 	// Particle Effect
 		char particleEffect[48];
 		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
@@ -251,7 +248,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 		}
 		while(!IsValidEntity(target) || target==client || (FF2_GetFF2flags(target) & FF2FLAG_ALLOWSPAWNINBOSSTEAM) || !IsPlayerAlive(target));
 
-		if(strlen(TparticleEffect)>0)
+		if(strlen(particleEffect)>0)
 		{
 			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, particleEffect)), TIMER_FLAG_NO_MAPCHANGE);
 			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, particleEffect, _, false)), TIMER_FLAG_NO_MAPCHANGE);
@@ -271,7 +268,7 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 			}
 			else
 			{
-				if(Tsounds)
+				if(sounds)
 					TF2_StunPlayer(client, Tstun, Tslowdown, TflagOverride, target);
 				else
 					TF2_StunPlayer(client, Tstun, Tslowdown, TflagOverride, 0);
@@ -311,7 +308,6 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	{
 		if(status>0)
 		{
-			int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 			float charge=FF2_GetBossCharge(boss, 0);
 			SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", 100.0);
 			TF2_AddCondition(client, TFCond_Charging, 0.25);
@@ -405,51 +401,6 @@ public int OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 		{
 			CreateTimer(0.1, Timer_DissolveRagdoll, GetEventInt(event, "userid"), TIMER_FLAG_NO_MAPCHANGE);
 		}
-		if(FF2_HasAbility(boss, this_plugin_name, "special_dropprop"))
-		{
-			char model[PLATFORM_MAX_PATH];
-			FF2_GetAbilityArgumentString(boss, this_plugin_name, "special_dropprop", 1, model, sizeof(model));
-			if(model[0]!='\0')  //Because you never know when someone is careless and doesn't specify a model...
-			{
-				if(!IsModelPrecached(model))  //Make sure the boss author precached the model (similar to above)
-				{
-					char bossName[64];
-					FF2_GetBossSpecial(boss, bossName, sizeof(bossName));
-					if(!FileExists(model, true))
-					{
-						LogError("[FF2 Bosses] Model '%s' doesn't exist!  Please check %s's config", model, bossName);
-						return Plugin_Continue;
-					}
-
-					PrecacheModel(model);
-				}
-
-				if(FF2_GetAbilityArgument(boss, this_plugin_name, "special_dropprop", 3, 0))
-				{
-					CreateTimer(0.01, Timer_RemoveRagdoll, GetEventInt(event, "userid"), TIMER_FLAG_NO_MAPCHANGE);
-				}
-
-				int prop=CreateEntityByName("prop_physics_override");
-				if(IsValidEntity(prop))
-				{
-					SetEntityModel(prop, model);
-					SetEntityMoveType(prop, MOVETYPE_VPHYSICS);
-					SetEntProp(prop, Prop_Send, "m_CollisionGroup", 1);
-					SetEntProp(prop, Prop_Send, "m_usSolidFlags", 16);
-					DispatchSpawn(prop);
-
-					float position[3];
-					GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
-					position[2]+=20;
-					TeleportEntity(prop, position, NULL_VECTOR, NULL_VECTOR);
-					float duration=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "special_dropprop", 2, 0.0);
-					if(duration>0.5)
-					{
-						CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(prop), TIMER_FLAG_NO_MAPCHANGE);
-					}
-				}
-			}
-		}
 		if(FF2_HasAbility(boss, this_plugin_name, "special_cbs_multimelee"))
 		{
 			if(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon")==GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee))
@@ -476,6 +427,53 @@ public int OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 					}
 				}
 				SetEntPropEnt(attacker, Prop_Data, "m_hActiveWeapon", weapon);
+			}
+		}
+		if(FF2_HasAbility(boss, this_plugin_name, "special_dropprop"))
+		{
+			char model[PLATFORM_MAX_PATH];
+			FF2_GetAbilityArgumentString(boss, this_plugin_name, "special_dropprop", 1, model, sizeof(model));
+			if(model[0]!='\0')  //Because you never know when someone is careless and doesn't specify a model...
+			{
+				if(!IsModelPrecached(model))  //Make sure the boss author precached the model (similar to above)
+				{
+					char bossName[64];
+					FF2_GetBossSpecial(boss, bossName, sizeof(bossName));
+					if(!FileExists(model, true))
+					{
+						LogError("[FF2 Bosses] Model '%s' doesn't exist!  Please check %s's config", model, bossName);
+						return;
+					}
+					else
+					{
+						PrecacheModel(model);
+					}
+				}
+
+				if(FF2_GetAbilityArgument(boss, this_plugin_name, "special_dropprop", 3, 0))
+				{
+					CreateTimer(0.01, Timer_RemoveRagdoll, GetEventInt(event, "userid"), TIMER_FLAG_NO_MAPCHANGE);
+				}
+
+				int prop=CreateEntityByName("prop_physics_override");
+				if(IsValidEntity(prop))
+				{
+					SetEntityModel(prop, model);
+					SetEntityMoveType(prop, MOVETYPE_VPHYSICS);
+					SetEntProp(prop, Prop_Send, "m_CollisionGroup", 1);
+					SetEntProp(prop, Prop_Send, "m_usSolidFlags", 16);
+					DispatchSpawn(prop);
+
+					float position[3];
+					GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
+					position[2]+=20;
+					TeleportEntity(prop, position, NULL_VECTOR, NULL_VECTOR);
+					float duration=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "special_dropprop", 2, 0.0);
+					if(duration>0.5)
+					{
+						CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(prop), TIMER_FLAG_NO_MAPCHANGE);
+					}
+				}
 			}
 		}
 	}
@@ -615,6 +613,16 @@ int SpawnManyObjects(char[] classname, int client, char[] model, int skin=0, int
 		SetEntProp(entity, Prop_Data, "m_iHealth", 900);
 		int offs=GetEntSendPropOffs(entity, "m_vecInitialVelocity", true);
 		SetEntData(entity, offs-4, 1, _, true);
+	}
+}
+
+public Action Timer_RemoveRagdoll(Handle timer, any userid)
+{
+	int client=GetClientOfUserId(userid);
+	int ragdoll;
+	if(client>0 && (ragdoll=GetEntPropEnt(client, Prop_Send, "m_hRagdoll"))>MaxClients)
+	{
+		AcceptEntityInput(ragdoll, "Kill");
 	}
 }
 
@@ -1028,10 +1036,7 @@ public Action Timer_StunBoss(Handle timer, any boss)
 	{
 		return;
 	}
-	if(Tsounds)
-		TF2_StunPlayer(client, Tstun, Tslowdown, TflagOverride, target);
-	else
-		TF2_StunPlayer(client, Tstun, Tslowdown, TflagOverride, 0);
+	TF2_StunPlayer(client, Tstun, Tslowdown, TflagOverride, 0);
 }
 
 
