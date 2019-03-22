@@ -217,7 +217,7 @@ native int FF2_GetClientDamage(int client);
  * @param abilityName	Name of ability (use null string if you want get boss's global "ragedist" value)
  * @return				Ability's rage distance
  */
-native int FF2_GetRageDist(int boss=0, const char[] pluginName="", const char[] abilityName="");
+native float FF2_GetRageDist(int boss=0, const char[] pluginName="", const char[] abilityName="");
 
 /**
  * Finds if a Boss has a certain ability
