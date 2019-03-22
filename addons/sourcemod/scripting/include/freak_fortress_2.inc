@@ -169,7 +169,7 @@ native void FF2_SetBossMaxLives(int boss, int lives);
  *						2 - other charged abilities
  * @return			Charge value of the Boss
  */
-native int FF2_GetBossCharge(int boss, int slot);
+native float FF2_GetBossCharge(int boss, int slot);
 
 /**
  * Sets the charge meter value of the Boss
