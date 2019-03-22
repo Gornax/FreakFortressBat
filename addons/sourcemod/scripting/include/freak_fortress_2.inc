@@ -383,15 +383,23 @@ native void FF2_SetClientGlow(int client, float time1, float time2=-1.0);
 native float FF2_GetClientShield(int client);
 
 /**
- * Sets a client's glow timer
+ * Sets a client's shield status
  *
  * @param client	Client's index
+ * @param entity	Shield entity
  * @param health	Shield's health out of 100
- * @param style		Force the shield type
- * @param force		Force equip if not equipped by client
+ * @param reduction	Shield's damage reduction
  * @noreturn
  */
-native void FF2_SetClientShield(int client, float health, int style=-1, bool force=false);
+native void FF2_SetClientShield(int client, int entity, float health, float reduction=-1);
+
+/**
+ * Removes a client's shield
+ *
+ * @param client	Client's index
+ * @noreturn
+ */
+native void FF2_RemoveClientShield(int client);
 
 /**
  * Returns whether or not debug is enabled
