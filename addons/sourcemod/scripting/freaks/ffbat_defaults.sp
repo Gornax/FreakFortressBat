@@ -1,6 +1,26 @@
 /*
-	Default Abilities Pack
+	Default Abilities Pack:
 
+	model_projectile_replace
+	rage_cbs_bowrage
+	rage_cloneattack
+	rage_explosive_dance
+	rage_instant_teleport
+	rage_tradespawm
+	rage_matrix_attack
+	rage_new_weapon
+	rage_overlay
+	rage_stun
+	rage_stunsg
+	rage_uber
+	spawn_many_objects_on_death
+	spawn_many_objects_on_kill
+	special_cbs_multimelee
+	special_democharge
+	special_dissolve
+	special_dropprop
+	special_noanims
+*/
 #pragma semicolon 1
 
 #include <sourcemod>
@@ -59,10 +79,7 @@ int FF2Flags[MAXPLAYERS+1];
 int CloneOwnerIndex[MAXPLAYERS+1]=-1;
 
 //	Instant Teleport
-//bool Tfriendly;
 bool Tsounds;
-char TflagOverrideStr[12];
-char TparticleEffect[48];
 float Tslowdown;
 float Tstun;
 int TflagOverride;
@@ -193,10 +210,11 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	// Stun Duration
 		Tstun=FF2_GetAbilityArgumentFloat(boss, this_plugin_name, ability_name, 1, 2.0);
 	// Friendly Teleport
-		//Tfriendly=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 2, 1));
+		//bool friendly=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 2, 1));
 	// Stun Flags
-		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, TflagOverrideStr, sizeof(TflagOverrideStr));
-		TflagOverride = ReadHexOrDecInt(TflagOverrideStr);
+		char flagOverrideStr[12];
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 3, flagOverrideStr, sizeof(flagOverrideStr));
+		TflagOverride = ReadHexOrDecInt(flagOverrideStr);
 		if(TflagOverride==0)
 			TflagOverride=TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT;
 	// Slowdown
@@ -204,7 +222,8 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 	// Sound To Client
 		Tsounds=view_as<bool>(FF2_GetAbilityArgument(boss, this_plugin_name, ability_name, 5, 1));
 	// Particle Effect
-		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, TparticleEffect, sizeof(TparticleEffect));
+		char particleEffect[48];
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, ability_name, 6, particleEffect, sizeof(particleEffect));
 
 		for(int target=1; target<=MaxClients; target++)
 		{
@@ -234,8 +253,8 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 
 		if(strlen(TparticleEffect)>0)
 		{
-			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, TparticleEffect)), TIMER_FLAG_NO_MAPCHANGE);
-			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, TparticleEffect, _, false)), TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, particleEffect)), TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(3.0, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, particleEffect, _, false)), TIMER_FLAG_NO_MAPCHANGE);
 		}
 
 		if(IsValidEntity(target))
@@ -1009,7 +1028,10 @@ public Action Timer_StunBoss(Handle timer, any boss)
 	{
 		return;
 	}
-	TF2_StunPlayer(client, 2.0, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
+	if(Tsounds)
+		TF2_StunPlayer(client, Tstun, Tslowdown, TflagOverride, target);
+	else
+		TF2_StunPlayer(client, Tstun, Tslowdown, TflagOverride, 0);
 }
 
 
