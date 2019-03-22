@@ -162,7 +162,7 @@ int Incoming[MAXPLAYERS+1];
 int Damage[MAXPLAYERS+1];
 int curHelp[MAXPLAYERS+1];
 int uberTarget[MAXPLAYERS+1];
-int hadshield[MAXPLAYERS+1];
+bool hadshield[MAXPLAYERS+1];
 int shield[MAXPLAYERS+1];
 int detonations[MAXPLAYERS+1];
 bool playBGM[MAXPLAYERS+1]=true;
@@ -4001,7 +4001,7 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 		else if(IsValidClient(boss))  //Boss here is actually a client index
 		{
 			SetClientGlow(boss, 0.0, 0.0);
-			hadshield[boss]=0;
+			hadshield[boss]=false;
 			shield[boss]=0;
 			detonations[boss]=0;
 		}
@@ -6767,7 +6767,7 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	}
 
 	SetEntityRenderColor(client, 255, 255, 255, 255);
-	hadshield[client]=0;
+	hadshield[client]=false;
 	shield[client]=0;
 	int index=-1;
 	int[] civilianCheck = new int[MaxClients+1];
@@ -6816,8 +6816,8 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	}
 
 	int playerBack=FindPlayerBack(client, 57);  //Razorback
-	hadshield[client]=IsValidEntity(playerBack) ? playerBack : 0;
 	shield[client]=IsValidEntity(playerBack) ? playerBack : 0;
+	hadshield[client]=IsValidEntity(playerBack) ? true : false;
 	if(IsValidEntity(FindPlayerBack(client, 642)))  //Cozy Camper
 	{
 		SpawnWeapon(client, "tf_weapon_smg", 16, 1, 6, "149 ; 1.5 ; 15 ; 0.0 ; 1 ; 0.75");
@@ -6843,8 +6843,8 @@ public Action Timer_CheckItems(Handle timer, any userid)
 	{
 		if(GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity")==client && !GetEntProp(entity, Prop_Send, "m_bDisguiseWearable"))
 		{
-			hadshield[client]=entity;
 			shield[client]=entity;
+			hadshield[client]=true;
 			DebugMsg(0, "Enabled Shield");
 		}
 	}
@@ -6856,7 +6856,7 @@ public Action Timer_CheckItems(Handle timer, any userid)
 			shieldHP[client]=500.0;
 			shDmgReduction[client]=0.75;
 		}
-		else
+		else if(GetConVarInt(cvarShieldType)==3)
 		{
 			shieldHP[client]=1000.0;
 			shDmgReduction[client]=0.5;
@@ -7769,7 +7769,7 @@ public Action ClientTimer(Handle timer)
 			}
 			else if((TF2_GetPlayerClass(client)==TFClass_Sniper || TF2_GetPlayerClass(client)==TFClass_DemoMan) && (GetConVarInt(cvarShieldType)==3 || GetConVarInt(cvarShieldType)==4))
 			{
-				if(shield[client] && shieldHP[client]>0.0)
+				if(shield[client] && shieldHP[client]>0.0 && GetConVarInt(cvarShieldType)>2)
 				{
 					SetHudTextParams(-1.0, 0.83, 0.15, 255, 255, 255, 255, 0);
 					if(GetConVarInt(cvarShieldType)==4)
@@ -13388,14 +13388,17 @@ public int Native_SetClientGlow(Handle plugin, int numParams)
 
 public int Native_GetClientShield(Handle plugin, int numParams)
 {
+	int client=GetNativeCell(1);
 	if(hadshield[client])
 	{
 		if(shield[client])
 		{
 			if(GetConVarInt(cvarShieldType)==4)
-				return RoundToFloor(shieldHP[client]*0.2));
+				return RoundToFloor(shieldHP[client]*0.2);
+			else if(GetConVarInt(cvarShieldType)==3)
+				return RoundToFloor(shieldHP[client]*0.1);
 			else
-				return RoundToFloor(shieldHP[client]*0.1));
+				return 100;
 		}
 		return 0;
 	}
@@ -13404,7 +13407,30 @@ public int Native_GetClientShield(Handle plugin, int numParams)
 
 public int Native_SetClientShield(Handle plugin, int numParams)
 {
-	// TODO
+	int client=GetNativeCell(1);
+	shield[client]=GetNativeCell(2);
+	if(GetConVarInt(cvarShieldType)==4)
+	{
+		shieldHP[client]=GetNativeCell(3)*5.0;
+		if(GetNativeCell(4)>0)
+			shDmgReduction[client]=GetNativeCell(4);
+		else
+			shDmgReduction[client]=GetNativeCell(3)*0.0075;
+	}
+	else
+	{
+		shieldHP[client]=GetNativeCell(3)*10.0;
+		if(GetNativeCell(4)>0)
+			shDmgReduction[client]=GetNativeCell(4);
+		else
+			shDmgReduction[client]=GetNativeCell(3)*0.005;
+	}
+}
+
+public int Native_RemoveClientShield(Handle plugin, int numParams)
+{
+	int client=GetNativeCell(1);
+	TF2_RemoveWearable(client, shield[client]);
 }
 
 public int Native_Debug(Handle plugin, int numParams)
