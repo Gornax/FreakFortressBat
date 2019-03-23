@@ -1743,6 +1743,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_SetClientGlow", Native_SetClientGlow);
 	CreateNative("FF2_GetClientShield", Native_GetClientShield);
 	CreateNative("FF2_SetClientShield", Native_SetClientShield);
+	CreateNative("FF2_RemoveClientShield", Native_RemoveClientShield);
 	CreateNative("FF2_Debug", Native_Debug);
 
 	PreAbility=CreateGlobalForward("FF2_PreAbility", ET_Hook, Param_Cell, Param_String, Param_String, Param_Cell, Param_CellByRef);  //Boss, plugin name, ability name, slot, enabled
@@ -5689,8 +5690,8 @@ public Action Timer_MakeBoss(Handle timer, any boss)
 		GhostBoss=GetConVarBool(cvarGhostBoss);
 
 	// Rage settings
-	rageMax[client]=view_as<float>(KvGetNum(BossKV[Special[boss]], "ragemax", 100));
-	rageMin[client]=view_as<float>(KvGetNum(BossKV[Special[boss]], "ragemin", 100));
+	rageMax[client]=KvGetFloat(BossKV[Special[boss]], "ragemax", 100.0);
+	rageMin[client]=KvGetFloat(BossKV[Special[boss]], "ragemin", 100.0);
 	rageMode[client]=KvGetNum(BossKV[Special[boss]], "ragemode", 0);
 
 	// Timer/point settings
@@ -9724,7 +9725,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 					{
 						SpawnSmallHealthPackAt(client, GetClientTeam(attacker), attacker);
 					}
-					case 327:  //Claidheamh MÃ²r
+					case 327:  //Claidheamh Mòr
 					{
 						if(kvWeaponMods == null || GetConVarInt(cvarHardcodeWep)>0)
 						{
