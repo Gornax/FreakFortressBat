@@ -5044,11 +5044,11 @@ public Action Command_SetMyBoss(int client, int args)
 	if(kmerge && CheckCommandAccess(client, "ff2_kstreak_a", 0, true))
 	{
 		if(FF2_KStreak_GetCookies(client, 0)==1)
-			Format(boss, sizeof(boss), "%T", "to0_disablekstreak");
+			Format(boss, sizeof(boss), "%T", "to0_disablekstreak", client);
 		else if(FF2_KStreak_GetCookies(client, 0)<1)
-			Format(boss, sizeof(boss), "%T", "to0_enablekstreak");
+			Format(boss, sizeof(boss), "%T", "to0_enablekstreak", client);
 		else
-			Format(boss, sizeof(boss), "%T", "to0_togglekstreak");
+			Format(boss, sizeof(boss), "%T", "to0_togglekstreak", client);
 
 		AddMenuItem(dMenu, boss, boss);
 	}
@@ -9599,7 +9599,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 
 	int index=-1;
 	int entity=GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-	if(IsValidEntity(weapon) && IsValidEdict(weapon) && GetClientTeam(client)==OtherTeam && SapperCooldown[client]<=0)
+	if(IsValidEntity(entity) && IsValidEdict(entity) && GetClientTeam(client)==OtherTeam && SapperCooldown[client]<=0)
 	{
 		index=GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex");
 
