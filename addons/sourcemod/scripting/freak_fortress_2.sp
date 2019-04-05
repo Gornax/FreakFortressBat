@@ -7979,29 +7979,32 @@ public Action ClientTimer(Handle timer)
 			if(class==TFClass_Medic)
 			{
 				int medigun=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
-				int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
-				char mediclassname[64];
-				if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Primary))
+				if(IsValidEntity(medigun))
 				{
-					if(IsValidEntity(medigun) && GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
+					int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
+					char mediclassname[64];
+					if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Primary))
 					{
-						SetHudTextParams(-1.0, 0.83, 0.35, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
-						FF2_ShowSyncHudText(client, jumpHUD, "%t", "uber-charge", charge);
-
-						if(charge==100 && !(FF2flags[client] & FF2FLAG_UBERREADY))
+						if(GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
 						{
-							FakeClientCommandEx(client, "voicemenu 1 7");
-							FF2flags[client]|=FF2FLAG_UBERREADY;
+							SetHudTextParams(-1.0, 0.83, 0.35, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
+							FF2_ShowSyncHudText(client, jumpHUD, "%t", "uber-charge", charge);
+
+							if(charge==100 && !(FF2flags[client] & FF2FLAG_UBERREADY))
+							{
+								FakeClientCommandEx(client, "voicemenu 1 7");
+								FF2flags[client]|=FF2FLAG_UBERREADY;
+							}
 						}
 					}
-				}
-				else if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary))
-				{
-					if(IsValidEntity(medigun) && GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
+					else if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary))
 					{
-						if(charge==100 && !(FF2flags[client] & FF2FLAG_UBERREADY))
+						if(GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
 						{
-							FF2flags[client]|=FF2FLAG_UBERREADY;
+							if(charge==100 && !(FF2flags[client] & FF2FLAG_UBERREADY))
+							{
+								FF2flags[client]|=FF2FLAG_UBERREADY;
+							}
 						}
 					}
 				}
