@@ -4842,7 +4842,7 @@ public Action Command_YouAreNext(int client, int args)
 	
 	if(client == 0)
 	{
-		ReplyToCommand(client, "%t", "Command is in-game only");
+		ReplyToCommand(client, "[SM] %t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 
@@ -4889,7 +4889,7 @@ public Action Command_SetMyBoss(int client, int args)
 {
 	if (!client)
 	{
-		ReplyToCommand(client, "%t", "Command is in-game only");
+		ReplyToCommand(client, "[SM] %t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	
@@ -4901,7 +4901,7 @@ public Action Command_SetMyBoss(int client, int args)
 	
 	if (!CheckCommandAccess(client, "ff2_boss", 0, true))
 	{
-		ReplyToCommand(client, "%t", "No Access");
+		ReplyToCommand(client, "[SM] %t", "No Access");
 		return Plugin_Handled;
 	}
 	DebugMsg(0, "Set Boss Comamnd");
@@ -11979,6 +11979,18 @@ public Action TurnToZeroPanel(int client, int target)
 		return Plugin_Continue;
 	}
 
+	if(!client)
+	{
+		ReplyToCommand(client, "[SM] %t", "Command is in-game only");
+		return Plugin_Handled;
+	}
+
+	if(GetClientQueuePoints(client)<0 && client==target)
+	{
+		ReplyToCommand(client, "[SM] %t", "No Access");
+		return Plugin_Continue;
+	}
+
 	Handle panel=CreatePanel();
 	char text[128];
 	if(client==target)
@@ -12561,7 +12573,7 @@ public Action Command_SkipSong(int client, int args)
 {
 	if(!client)
 	{
-		ReplyToCommand(client, "%t", "Command is in-game only");
+		ReplyToCommand(client, "[SM] %t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 
@@ -12635,7 +12647,7 @@ public Action Command_ShuffleSong(int client, int args)
 {
 	if(!client)
 	{
-		ReplyToCommand(client, "%t", "Command is in-game only");
+		ReplyToCommand(client, "[SM] %t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 
@@ -12665,7 +12677,7 @@ public Action Command_Tracklist(int client, int args)
 {
 	if(!client)
 	{
-		ReplyToCommand(client, "%t", "Command is in-game only");
+		ReplyToCommand(client, "[SM] %t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 
