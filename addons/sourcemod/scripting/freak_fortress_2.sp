@@ -153,6 +153,7 @@ int BlueAlivePlayers;
 int RoundCount;
 int Companions=0;
 int GhostBoss=0;
+bool LastMan=true;
 float rageMax[MAXPLAYERS+1];
 float rageMin[MAXPLAYERS+1];
 int rageMode[MAXPLAYERS+1];
@@ -3891,6 +3892,7 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 	RoundCount++;
 	Companions=0;
 	SapperMinion=false;
+	LastMan=true;
 	if(HasSwitched)
 		HasSwitched=false;
 
@@ -6766,7 +6768,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			}
 			case 1180:  //Gas Passer
 			{
-				Handle itemOverride=PrepareItemHandle(item, _, _, "874 ; 0.6 ; 875 ; 1 ; 2059 ; 3000");
+				Handle itemOverride=PrepareItemHandle(item, _, _, "875 ; 1 ; 2059 ; 3000");
 				if(itemOverride!=INVALID_HANDLE)
 				{
 					item=itemOverride;
@@ -9127,7 +9129,7 @@ public Action Timer_CheckAlivePlayers(Handle timer)
 	{
 		ForceTeamWin(BossTeam);
 	}
-	else if(RedAlivePlayers==1 && BlueAlivePlayers && Boss[0] && !DrawGameTimer)
+	else if(RedAlivePlayers==1 && BlueAlivePlayers && Boss[0] && !DrawGameTimer && LastMan)
 	{
 		char sound[PLATFORM_MAX_PATH];
 		if(RandomSound("sound_lastman", sound, sizeof(sound)))
@@ -9135,6 +9137,7 @@ public Action Timer_CheckAlivePlayers(Handle timer)
 			EmitSoundToAllExcept(SOUNDEXCEPT_VOICE, sound, _, _, _, _, _, _, _, _, _, false);
 			EmitSoundToAllExcept(SOUNDEXCEPT_VOICE, sound, _, _, _, _, _, _, _, _, _, false);
 		}
+		LastMan=false;
 	}
 	else if(PointType!=1 && RedAlivePlayers<=AliveToEnable && !executed)
 	{
