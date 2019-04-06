@@ -4744,7 +4744,7 @@ void StopMusic(int client=0, bool permanent=false)
 	}
 }
 
-stock void EmitSoundToAllExcept(char exceptiontype=SOUNDEXCEPT_MUSIC, const char[] sample, int entity=SOUND_FROM_PLAYER, int channel=SNDCHAN_AUTO, int level=SNDLEVEL_NORMAL, int flags=SND_NOFLAGS, float volume=SNDVOL_NORMAL, int pitch=SNDPITCH_NORMAL, int speakerentity=-1, const float origin[3]=NULL_VECTOR, const float dir[3]=NULL_VECTOR, bool updatePos=true, float soundtime=0.0)
+stock void EmitSoundToAllExcept(int exceptiontype=SOUNDEXCEPT_MUSIC, const char[] sample, int entity=SOUND_FROM_PLAYER, int channel=SNDCHAN_AUTO, int level=SNDLEVEL_NORMAL, int flags=SND_NOFLAGS, float volume=SNDVOL_NORMAL, int pitch=SNDPITCH_NORMAL, int speakerentity=-1, const float origin[3]=NULL_VECTOR, const float dir[3]=NULL_VECTOR, bool updatePos=true, float soundtime=0.0)
 {
 	int[] clients = new int[MaxClients];
 	int total;
