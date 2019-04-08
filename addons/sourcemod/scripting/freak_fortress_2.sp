@@ -3412,7 +3412,7 @@ stock bool MapHasMusic(bool forceRecalc=false)  //SAAAAAARGE
 		while((entity=FindEntityByClassname2(entity, "info_target"))!=-1)
 		{
 			GetEntPropString(entity, Prop_Data, "m_iName", name, sizeof(name));
-			if(!strcmp(name, "hale_no_music", false) || !strncmp(currentmap, "vsh_megaman", 15, false))
+			if(!strcmp(name, "hale_no_music", false))
 			{
 				DebugMsg(0, "Detected Map Music");
 				hasMusic=true;
@@ -4551,7 +4551,7 @@ public Action StartBossTimer(Handle timer)
 public Action Timer_PrepareBGM(Handle timer, any userid)
 {
 	int client=GetClientOfUserId(userid);
-	if(CheckRoundState()!=1 || (!client && MapHasMusic()) || StrEqual(currentBGM[client], "ff2_stop_music", true))
+	if(CheckRoundState()!=1 || !client || MapHasMusic() || StrEqual(currentBGM[client], "ff2_stop_music", true))
 	{
 		MusicTimer[client]=INVALID_HANDLE;
 		return;
