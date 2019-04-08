@@ -4343,9 +4343,14 @@ public int SortQueueDesc(const x[], const y[], const array[][], Handle data)
 
 public Action OnBroadcast(Handle event, const char[] name, bool dontBroadcast)
 {
+	if(!Enabled)
+	{
+		return Plugin_Continue;
+	}
+
 	char sound[PLATFORM_MAX_PATH];
 	GetEventString(event, "sound", sound, sizeof(sound));
-	if(!StrContains(sound, "Game.Your", false) || StrEqual(sound, "Game.Stalemate", false))
+	if(!StrContains(sound, "Game.Your", false) || StrEqual(sound, "Game.Stalemate", false) || !StrContains(sound, "Announcer.AM_RoundStartRandom", false))
 	{
 		return Plugin_Handled;
 	}
