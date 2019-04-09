@@ -230,7 +230,6 @@ ConVar cvarBossRTD;
 ConVar cvarDeadRingerHud;
 ConVar cvarUpdater;
 ConVar cvarDebug;
-ConVar cvarDebugMsg;
 ConVar cvarPreroundBossDisconnect;
 ConVar cvarCaberDetonations;
 ConVar cvarDmg2KStreak;
@@ -310,7 +309,6 @@ int allowedDetonations;
 float GoombaDamage=0.05;
 float reboundPower=300.0;
 bool canBossRTD;
-int DebugMsgFreeze;
 float SniperDamage=2.5;
 float SniperMiniDamage=2.1;
 float BowDamage=1.25;
@@ -1865,7 +1863,6 @@ public void OnPluginStart()
 	cvarDeadRingerHud=CreateConVar("ff2_deadringer_hud", "1", "Dead Ringer indicator? 0 to disable, 1 to enable", _, true, 0.0, true, 1.0);
 	cvarUpdater=CreateConVar("ff2_updater", "1", "0-Disable Updater support, 1-Enable automatic updating (recommended, requires Updater)", _, true, 0.0, true, 1.0);
 	cvarDebug=CreateConVar("ff2_debug", "0", "0-Disable FF2 debug output, 1-Enable debugging (not recommended)", _, true, 0.0, true, 1.0);
-	cvarDebugMsg=CreateConVar("ff2_debug_msg", "0", "1-Chat to players, 2-Chat to ff2_debuger perms, 4-Console, 8-Custom log", _, true, 0.0, true, 15.0);
 	cvarDmg2KStreak=CreateConVar("ff2_dmg_kstreak", "250", "Minimum damage to increase killstreak count", _, true, 0.0);
 	cvarAirStrike=CreateConVar("ff2_dmg_airstrike", "250", "Minimum damage to increase head count for the Air-Strike", _, true, 0.0);
 	cvarSniperDamage=CreateConVar("ff2_sniper_dmg", "2.5", "Sniper Rifle normal multiplier", _, true, 0.0);
@@ -2358,7 +2355,6 @@ public Action Timer_InfiniteRage(Handle timer, any client)
 	
 	if(!IsBoss(client) || !IsPlayerAlive(client) || GetBossIndex(client)==-1 || !InfiniteRageActive[client])
 	{
-		DebugMsg(0, "Timer_InfiniteRage Stopped");
 		return Plugin_Stop;
 	}
 
@@ -2440,7 +2436,6 @@ public void OnLibraryRemoved(const char[] name)
 	if(!strcmp(name, "SteamTools", false))
 	{
 		steamtools=false;
-		DebugMsg(1, "SteamTools removed");
 	}
 	#endif
 
@@ -2448,7 +2443,6 @@ public void OnLibraryRemoved(const char[] name)
 	if(!strcmp(name, "tf2attributes", false))
 	{
 		tf2attributes=false;
-		DebugMsg(1, "tf2attributes removed");
 	}
 	#endif
 
@@ -2456,21 +2450,18 @@ public void OnLibraryRemoved(const char[] name)
 	if(!strcmp(name, "goomba", false))
 	{
 		goomba=false;
-		DebugMsg(1, "goomba removed");
 	}
 	#endif
 
 	if(!strcmp(name, "smac", false))
 	{
 		smac=false;
-		DebugMsg(0, "smac removed");
 	}
 
 	#if defined _updater_included
 	if(StrEqual(name, "updater"))
 	{
 		Updater_RemovePlugin();
-		DebugMsg(0, "updater removed");
 	}
 	#endif
 
@@ -2478,7 +2469,6 @@ public void OnLibraryRemoved(const char[] name)
 	if(!strcmp(name, "ff2_kstreak_pref", false))
 	{
 		kmerge=false;
-		DebugMsg(0, "ff2_kstreak_pref removed");
 	}
 	#endif
 }
@@ -2553,7 +2543,6 @@ public void OnPluginEnd()
 	{
 		ForceTeamWin(0);
 		CPrintToChatAll("{olive}[FF2]{default} The plugin has been unexpectedly unloaded!");
-		DebugMsg(2, "Plugin reloaded mid-round");
 	}
 }
 
@@ -2561,7 +2550,6 @@ public void EnableFF2()
 {
 	Enabled=true;
 	Enabled2=true;
-	DebugMsg(0, "EnableFF2");
 
 	//Cache cvars
 	SetConVarString(FindConVar("ff2_version"), PLUGIN_VERSION);
@@ -2652,7 +2640,6 @@ public void DisableFF2()
 {
 	Enabled=false;
 	Enabled2=false;
-	DebugMsg(0, "DisableFF2");
 
 	DisableSubPlugins();
 
@@ -2714,7 +2701,6 @@ public void CacheWeapons()
 	if(!FileExists(config))
 	{
 		LogError("[FF2] Freak Fortress 2 disabled-can not find '%s'!", WeaponCFG);
-		DebugMsg(4, "WeaponCFG is missing");
 		Enabled2=false;
 		return;
 	}
@@ -2723,7 +2709,6 @@ public void CacheWeapons()
 	if(!FileToKeyValues(kvWeaponMods, config))
 	{
 		LogError("[FF2] Freak Fortress 2 disabled-'%s' is improperly formatted!", WeaponCFG);
-		DebugMsg(4, "WeaponCFG has invaild format");
 		Enabled2=false;
 		return;
 	}
@@ -2820,7 +2805,6 @@ public void FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextK
 		if(amount % 2)
 		{
 			LogError("[FF2 Bosses] Invalid chances string, disregarding chances");
-			DebugMsg(2, "Character set has invaild chance strings");
 			strcopy(ChancesString, sizeof(ChancesString), "");
 			amount=0;
 		}
@@ -2834,7 +2818,6 @@ public void FindCharacters()  //TODO: Investigate KvGotoFirstSubKey; KvGotoNextK
 				if(StringToInt(stringChances[chancesIndex])<=0)
 				{
 					LogError("[FF2 Bosses] Character %i cannot have a zero or negative chance, disregarding chances", chancesIndex-1);
-					DebugMsg(2, "Character set has invaild chance strings");
 					strcopy(ChancesString, sizeof(ChancesString), "");
 					break;
 				}
@@ -2875,7 +2858,6 @@ void EnableSubPlugins(bool force=false)
 	}
 
 	areSubPluginsEnabled=true;
-	DebugMsg(0, "Loading sub-plugins");
 	char path[PLATFORM_MAX_PATH], filename[PLATFORM_MAX_PATH], filename_old[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, path, sizeof(path), "plugins/freaks");
 	FileType filetype;
@@ -2922,7 +2904,6 @@ void DisableSubPlugins(bool force=false)
 	}
 	ServerExecute();
 	areSubPluginsEnabled=false;
-	DebugMsg(0, "Unloaded sub-plugins");
 }
 
 public void LoadCharacter(const char[] character)
@@ -3277,57 +3258,47 @@ public Action Timer_Announce(Handle timer)
 		{
 			case 1:
 			{
-				DebugMsg(0, "ServerAd Announcement %i", announcecount);
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ServerAd");
 			}
 			case 2:
 			{
-				DebugMsg(0, "ff2_last_update Announcement %i", announcecount);
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
 			}
 			case 3:
 			{
-				DebugMsg(0, "ClassicAd Announcement %i", announcecount);
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ClassicAd");
 			}
 			case 4:
 			{
 				if(GetConVarBool(cvarToggleBoss))	// Toggle Command?
 				{
-					DebugMsg(0, "FF2 Toggle Command Announcement %i", announcecount);
 					CPrintToChatAll("{olive}[FF2]{default} %t", "FF2 Toggle Command");
 				}
 				else					// Guess not, play the 4th thing and next is 5
 				{
-					DebugMsg(0, "DevAd Announcement %i", announcecount);
 					announcecount=5;
 					CPrintToChatAll("{olive}[FF2]{default} %t", "DevAd", PLUGIN_VERSION);
-					DebugMsg(0, "Changed Announcement %i", announcecount);
 				}
 			}
 			case 5:
 			{
-				DebugMsg(0, "DevAd Announcement %i", announcecount);
 				CPrintToChatAll("{olive}[FF2]{default} %t", "DevAd", PLUGIN_VERSION);
 			}
 			case 6:
 			{
 				if(GetConVarBool(cvarDuoBoss))		// Companion Toggle?
 				{
-					DebugMsg(0, "FF2 Companion Command Announcement %i", announcecount);
 					CPrintToChatAll("{olive}[FF2]{default} %t", "FF2 Companion Command");
 				}
 				else					// Guess not either, play the last thing and next is 0
 				{
 					announcecount=0;
-					DebugMsg(0, "type_ff2_to_open_menu Announcement %i", announcecount);
 					CPrintToChatAll("{olive}[FF2]{default} %t", "type_ff2_to_open_menu");
 				}
 			}
 			default:
 			{
 				announcecount=0;
-				DebugMsg(0, "type_ff2_to_open_menu Announcement %i", announcecount);
 				CPrintToChatAll("{olive}[FF2]{default} %t", "type_ff2_to_open_menu");
 			}
 		}
@@ -3350,12 +3321,10 @@ stock bool IsFF2Map()
 		if(FileExists(config))
 		{
 			LogError("[FF2] Please move '%s' from '%s' to '%s'! Disabling Plugin!", MapCFG, ConfigPath, DataPath);
-			DebugMsg(4, "MapCFG is in ConfigPath and not DataPath");
 		}
 		else
 		{
 			LogError("[FF2] Unable to find %s, disabling plugin.", config);
-			DebugMsg(4, "Could not find MapCFG");
 		}
 		return false;
 	}
@@ -3364,7 +3333,6 @@ stock bool IsFF2Map()
 	if(file==INVALID_HANDLE)
 	{
 		LogError("[FF2] Error reading maps from %s, disabling plugin.", config);
-		DebugMsg(4, "Could not read MapCFG");
 		return false;
 	}
 
@@ -3375,7 +3343,6 @@ stock bool IsFF2Map()
 		if(tries==100)
 		{
 			LogError("[FF2] Breaking infinite loop when trying to check the map.");
-			DebugMsg(4, "An infinite loop occured when trying to check the map");
 			return false;
 		}
 
@@ -3414,7 +3381,7 @@ stock bool MapHasMusic(bool forceRecalc=false)  //SAAAAAARGE
 			GetEntPropString(entity, Prop_Data, "m_iName", name, sizeof(name));
 			if(!strcmp(name, "hale_no_music", false))
 			{
-				DebugMsg(0, "Detected Map Music");
+				Debug("Detected Map Music");
 				hasMusic=true;
 			}
 		}
@@ -3439,7 +3406,6 @@ stock bool CheckToChangeMapDoors()
 		if(FileExists(config))
 		{
 			LogError("[FF2] Please move '%s' from '%s' to '%s'!", DoorCFG, ConfigPath, DataPath);
-			DebugMsg(4, "DoorCFG is in ConfigPath and not DataPath");
 		}
 		if(!strncmp(currentmap, "vsh_lolcano_pb1", 15, false))
 		{
@@ -3516,17 +3482,14 @@ public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 		case 1:
 		{
 			blueBoss=view_as<bool>(GetRandomInt(0, 1));
-			DebugMsg(0, "Random blueBoss");
 		}
 		case 2:
 		{
 			blueBoss=false;
-			DebugMsg(0, "False blueBoss");
 		}
 		default:
 		{
 			blueBoss=true;
-			DebugMsg(0, "True blueBoss");
 		}
 	}
 
@@ -3567,8 +3530,6 @@ public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 		Enabled=false;
 		DisableSubPlugins();
 		SetControlPoint(true);
-		DebugMsg(0, "Not enough players");
-		DebugMsg(0, "Renamed server to %s", oldName);
 		return Plugin_Continue;
 	}
 	else if(RoundCount<arenaRounds)  //We're still in arena mode
@@ -3598,7 +3559,6 @@ public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 				toRed=!toRed;
 			}
 		}
-		DebugMsg(0, "Arena round");
 		return Plugin_Continue;
 	}
 
@@ -3658,7 +3618,6 @@ public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 	if((Special[0]<0) || !BossKV[Special[0]])
 	{
 		LogError("[FF2 Bosses] Couldn't find a boss!");
-		DebugMsg(3, "Could not find a boss");
 		return Plugin_Continue;
 	}
 
@@ -3777,7 +3736,6 @@ public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 		KvGetString(BossKV[Special[0]], "name", bossName, sizeof(bossName));
 		Format(newName, sizeof(newName), "%s | %s", oldName, bossName);
 		SetConVarString(hostName, newName);
-		DebugMsg(0, "Renamed server to %s", newName);
 	}
 
 	healthcheckused=0;
@@ -3790,7 +3748,6 @@ public Action Timer_EnableCap(Handle timer)
 	if((Enabled || Enabled2) && CheckRoundState()==-1)
 	{
 		SetControlPoint(true);
-		DebugMsg(0, "Enabled Control Point");
 		if(checkDoors)
 		{
 			int ent=-1;
@@ -3812,7 +3769,6 @@ public Action BossInfoTimer_Begin(Handle timer, any boss)
 {
 	BossInfoTimer[boss][0]=INVALID_HANDLE;
 	BossInfoTimer[boss][1]=CreateTimer(0.2, BossInfoTimer_ShowInfo, boss, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	DebugMsg(0, "Boss Info Begin");
 	return Plugin_Continue;
 }
 
@@ -3821,7 +3777,6 @@ public Action BossInfoTimer_ShowInfo(Handle timer, any boss)
 	if(!IsValidClient(Boss[boss]))
 	{
 		BossInfoTimer[boss][1]=INVALID_HANDLE;
-		DebugMsg(0, "Boss Info Stopped");
 		return Plugin_Stop;
 	}
 
@@ -3883,7 +3838,6 @@ public void CheckArena()
 	else
 	{
 		SetArenaCapEnableTime(PointTotal);
-		DebugMsg(0, "Set Point Timer");
 	}
 }
 
@@ -3899,12 +3853,10 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 	if(playing>=GetConVarInt(cvarDuoMin) && !DuoMin)  // Check if theres enough players for companions
 	{
 		DuoMin=true;
-		DebugMsg(0, "Duos Enabled");
 	}
 	else if(playing<GetConVarInt(cvarDuoMin) && DuoMin)
 	{
 		DuoMin=false;
-		DebugMsg(0, "Duos Disabled");
 	}
 
 	if(!Enabled)
@@ -3949,28 +3901,24 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 		WriteFileLine(bossLog, "%s on %s - %s <%s> has %s", FormatedTime, MapName, PlayerName, Authid, Result);
 		WriteFileLine(bossLog, "");
 		CloseHandle(bossLog);
-		DebugMsg(0, "Writing Boss Log");
 	}
 
 	if(ReloadFF2)
 	{
 		ServerCommand("sm plugins reload freak_fortress_2");
-		DebugMsg(3, "Reloaded FF2");
 	}
 
 	if(LoadCharset)
 	{
 		LoadCharset=false;
 		FindCharacters();
-		strcopy(FF2CharSetString, 2, "");	
-		DebugMsg(0, "Reloaded Charset");
+		strcopy(FF2CharSetString, 2, "");
 	}
 
 	if(ReloadWeapons)
 	{
 		CacheWeapons();
 		ReloadWeapons=false;
-		DebugMsg(0, "Reloaded Weapons");
 	}
 
 	if(ReloadConfigs)
@@ -3979,7 +3927,6 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 		CheckToChangeMapDoors();
 		FindCharacters();
 		ReloadConfigs=false;
-		DebugMsg(1, "Reloaded Configs");
 	}
 
 	executed=false;
@@ -4186,12 +4133,10 @@ public Action OnPlayerDisconnect(Handle event, const char[] name, bool dontBroad
 	if(playing>=GetConVarInt(cvarDuoMin) && !DuoMin)  // Check if theres enough players for companions
 	{
 		DuoMin=true;
-		DebugMsg(0, "Duos Enabled");
 	}
 	else if(playing<GetConVarInt(cvarDuoMin) && DuoMin)
 	{
 		DuoMin=false;
-		DebugMsg(0, "Duos Disabled");
 	}
 	int client=GetClientOfUserId(GetEventInt(event, "userid"));
 	xIncoming[client] = "";
@@ -4208,7 +4153,6 @@ public Action BossMenuTimer(Handle timer, any clientpack)
 	{
 		BossMenu(clientId, 0);
 	}
-	DebugMsg(0, "Forced Boss Toggle");
 }
 
 // Companion Menu
@@ -4236,7 +4180,6 @@ public Action CompanionMenu(int client, int args)
 		SetMenuExitButton(menu, true);
 
 		DisplayMenu(menu, client, 20);
-		DebugMsg(0, "Showed Companion Toggle");
 	}
 	return Plugin_Handled;
 }
@@ -4296,7 +4239,6 @@ public Action BossMenu(int client, int args)
 		SetMenuExitButton(menu, true);
 
 		DisplayMenu(menu, client, 20);
-		DebugMsg(0, "Showed Boss Toggle");
 	}
 	return Plugin_Handled;
 }
@@ -4371,7 +4313,6 @@ public Action Timer_CalcQueuePoints(Handle timer)
 	botqueuepoints+=5;
 	int[] add_points = new int[MaxClients+1];
 	int[] add_points2 = new int[MaxClients+1];
-	DebugMsg(0, "Queue points set");
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if((ClientCookie[client] == TOGGLE_OFF || ClientCookie[client] == TOGGLE_TEMP) && GetConVarBool(cvarToggleBoss)) // Do not give queue points to those who have ff2 bosses disabled
@@ -4481,7 +4422,6 @@ public Action StartResponseTimer(Handle timer)
 		EmitSoundToAllExcept(SOUNDEXCEPT_VOICE, sound, _, _, _, _, _, _, _, _, _, false);
 		EmitSoundToAllExcept(SOUNDEXCEPT_VOICE, sound, _, _, _, _, _, _, _, _, _, false);
 	}
-	DebugMsg(0, "Start Response");
 	return Plugin_Continue;
 }
 
@@ -4493,14 +4433,12 @@ public Action StartIntroMusicTimer(Handle timer)
 		EmitSoundToAllExcept(SOUNDEXCEPT_MUSIC, sound, _, _, _, _, _, _, _, _, _, false);
 		EmitSoundToAllExcept(SOUNDEXCEPT_MUSIC, sound, _, _, _, _, _, _, _, _, _, false);
 	}
-	DebugMsg(0, "Start Intro Music");
 	return Plugin_Continue;
 }
 
 public Action StartBossTimer(Handle timer)
 {
 	CreateTimer(0.1, Timer_Move, _, TIMER_FLAG_NO_MAPCHANGE);
-	DebugMsg(0, "Start Boss Timer");
 	bool isBossAlive;
 	for(int boss; boss<=MaxClients; boss++)
 	{
@@ -4561,7 +4499,6 @@ public Action Timer_PrepareBGM(Handle timer, any userid)
 		MusicTimer[client]=INVALID_HANDLE;
 		return;
 	}
-	DebugMsg(0, "Prepare BGM");
 
 	KvRewind(BossKV[Special[0]]);
 	if(KvJumpToKey(BossKV[Special[0]], "sound_bgm"))
@@ -4602,6 +4539,7 @@ public Action Timer_PrepareBGM(Handle timer, any userid)
 			KvRewind(BossKV[Special[0]]);
 			KvGetString(BossKV[Special[0]], "filename", bossName, sizeof(bossName));
 			LogError("[FF2 Bosses] Character %s is missing BGM file '%s'!", bossName, temp);
+			Debug("{red}MALFUNCTION! NEED INPUT!");
 			if(MusicTimer[client]!=INVALID_HANDLE)
 			{
 				KillTimer(MusicTimer[client]);
@@ -4612,7 +4550,6 @@ public Action Timer_PrepareBGM(Handle timer, any userid)
 
 void PlayBGM(int client, char[] music, float time, bool loop=true, char[] name="", char[] artist="")
 {
-	DebugMsg(0, "Play BGM");
 	Action action;
 	Call_StartForward(OnMusic);
 	char temp[3][PLATFORM_MAX_PATH];
@@ -4627,12 +4564,14 @@ void PlayBGM(int client, char[] music, float time, bool loop=true, char[] name="
 	{
 		case Plugin_Stop, Plugin_Handled:
 		{
+			Debug("NEED INPUT!");
 			return;
 		}
 		case Plugin_Changed:
 		{
 			strcopy(music, PLATFORM_MAX_PATH, temp[0]);
 			time=time2;
+			Debug("OOO... INPUT! %s | %f", music, time);
 		}
 	}
 
@@ -4684,7 +4623,6 @@ void StartMusic(int client=0)
 {
 	if(client<=0)  //Start music for all clients
 	{
-		DebugMsg(0, "Start Music All");
 		StopMusic();
 		for(int target; target<=MaxClients; target++)
 		{
@@ -4694,7 +4632,6 @@ void StartMusic(int client=0)
 	}
 	else
 	{
-		DebugMsg(0, "Start Music");
 		StopMusic(client);
 		playBGM[client]=true;
 		CreateTimer(0.1, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -4705,7 +4642,6 @@ void StopMusic(int client=0, bool permanent=false)
 {
 	if(client<=0)  //Stop music for all clients
 	{
-		DebugMsg(0, "Stop Music All");
 		if(permanent)
 		{
 			playBGM[0]=false;
@@ -4715,10 +4651,15 @@ void StopMusic(int client=0, bool permanent=false)
 		{
 			if(IsValidClient(client))
 			{
+				if(!currentBGM[client])
+				{
+					Debug("{green}MALFUNCTION! NEED INPUT!");
+				}
 				StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
 
 				if(MusicTimer[client]!=INVALID_HANDLE)
 				{
+					Debug("TERMINATING INPUT!");
 					KillTimer(MusicTimer[client]);
 					MusicTimer[client]=INVALID_HANDLE;
 				}
@@ -4733,12 +4674,16 @@ void StopMusic(int client=0, bool permanent=false)
 	}
 	else
 	{
-		DebugMsg(0, "Stop Music");
+		if(!currentBGM[client])
+		{
+			Debug("{green}MALFUNCTION! NEED INPUT!");
+		}
 		StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
 		StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
 
 		if(MusicTimer[client]!=INVALID_HANDLE)
 		{
+			Debug("END INPUT FOR %N!", client);
 			KillTimer(MusicTimer[client]);
 			MusicTimer[client]=INVALID_HANDLE;
 		}
@@ -13335,77 +13280,9 @@ public Action Timer_RemoveStun(Handle timer, int client)
 	return Plugin_Continue;
 }
 
-public int DebugMsg(int priority, char[] buffer, any ...)
+void DebugMsg(int priority, char[] buffer, any ...)
 {
-	if(!GetConVarBool(cvarDebug) || GetConVarInt(cvarDebugMsg)<1 || DebugMsgFreeze>8)
-	{
-		return;
-	}
 
-	char prefix[64], prefixcon[64], message[512], messagecon[512];
-	switch(priority)
-	{
-		case 1:
-			Format(prefix, sizeof(prefix), "{yellow}[!]{default} ");
-		case 2:
-			Format(prefix, sizeof(prefix), "{orange}[!!]{default} ");
-		case 3:
-			Format(prefix, sizeof(prefix), "{red}[!!!]{default} ");
-		case 4:
-			Format(prefix, sizeof(prefix), "{darkred}[Critical]{default} ");
-		default:
-			Format(prefix, sizeof(prefix), "");
-	}
-	switch(priority)
-	{
-		case 1:
-			Format(prefixcon, sizeof(prefixcon), "[!] ");
-		case 2:
-			Format(prefixcon, sizeof(prefixcon), "[!!] ");
-		case 3:
-			Format(prefixcon, sizeof(prefixcon), "[!!!] ");
-		case 4:
-			Format(prefixcon, sizeof(prefixcon), "[Critical] ");
-		default:
-			Format(prefixcon, sizeof(prefixcon), "");
-	}
-	Format(message, sizeof(message), "%s%s", prefix, buffer);
-	Format(messagecon, sizeof(messagecon), "%s%s", prefixcon, buffer);
-	ReplaceString(message, sizeof(message), "\n", "");  //Get rid of newlines
-	ReplaceString(messagecon, sizeof(messagecon), "\n", "");  //Get rid of newlines
-
-	for(int client=1; client<=MaxClients; client++)
-	{
-		if(IsValidClient(client) && IsClientInGame(client))
-		{
-			if(CheckCommandAccess(client, "ff2_debuger", ADMFLAG_RCON, true) && (GetConVarInt(cvarDebugMsg)==2 || GetConVarInt(cvarDebugMsg)==6 || GetConVarInt(cvarDebugMsg)==10 || GetConVarInt(cvarDebugMsg)==14))
-			{
-				CPrintToChat(client, "%s", message);
-			}
-			else if(!CheckCommandAccess(client, "ff2_debuger", ADMFLAG_RCON, true) && (GetConVarInt(cvarDebugMsg)==1 || GetConVarInt(cvarDebugMsg)==5 || GetConVarInt(cvarDebugMsg)==9 || GetConVarInt(cvarDebugMsg)==13))
-			{
-				CPrintToChat(client, "%s", message);
-			}
-		}
-	}
-
-	// Very confusing flags...
-	if(GetConVarInt(cvarDebugMsg)==3 || GetConVarInt(cvarDebugMsg)==7 || GetConVarInt(cvarDebugMsg)==11 || GetConVarInt(cvarDebugMsg)==15)
-		CPrintToChatAll("%s", message);
-
-	if((GetConVarInt(cvarDebugMsg)<=7 && GetConVarInt(cvarDebugMsg)>=4) || GetConVarInt(cvarDebugMsg)>=12)
-		PrintToServer("%s", messagecon);
-
-	if(GetConVarInt(cvarDebugMsg)>=8)
-		LogToFile(dLog, "%s", messagecon);
-
-	DebugMsgFreeze++;
-	CreateTimer(0.1, Timer_DebugMsg, _, TIMER_FLAG_NO_MAPCHANGE);
-}
-
-public Action Timer_DebugMsg(Handle timer)
-{
-	DebugMsgFreeze=0;
 }
 
 public int Native_IsEnabled(Handle plugin, int numParams)
