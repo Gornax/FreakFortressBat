@@ -6,7 +6,7 @@
 	rage_cloneattack
 	rage_explosive_dance
 	rage_instant_teleport
-	rage_tradespawm
+	rage_tradespam
 	rage_matrix_attack
 	rage_new_weapon
 	rage_overlay
@@ -31,6 +31,10 @@
 #include <tf2items>
 #include <freak_fortress_2>
 #include <freak_fortress_2_subplugin>
+#undef REQUIRE_PLUGIN
+//#tryinclude <smac>
+//#tryinclude <freak_fortress_2_kstreak>
+#define REQUIRE_PLUGIN
 
 #pragma newdecls required
 
@@ -86,6 +90,12 @@ int TflagOverride;
 //	Matrix Attack
 Handle SlowMoTimer;
 int oldTarget;
+#if defined _smac_included
+bool HasSlowdown[MAXPLAYERS+1]=false;
+#else
+bool smac=false;
+bool HasSlowdown=false;
+#endif
 
 //	Stun Rage
 bool Outdated=false;
@@ -134,7 +144,10 @@ public void OnPluginStart2()
 
 	PrecacheSound("items/pumpkin_pickup.wav");
 
-	LoadTranslations("freak_fortress_2.phrases");
+	if(Outdated)
+		LoadTranslations("ff2_1st_set.phrases");
+	else
+		LoadTranslations("freak_fortress_2.phrases");
 }
 
 public void OnMapStart()
@@ -150,6 +163,26 @@ public void OnAllPluginsLoaded()
 	if(!Outdated)
 		cvarSoloShame=FindConVar("ff2_solo_shame");
 }
+
+#if !defined _smac_included
+public void OnLibraryAdded(const char[] name)
+{
+	if(!strcmp(name, "smac", false))
+	{
+		smac=true;
+		Debug("Smac added");
+	}
+}
+
+public OnLibraryRemoved(const char[] name)
+{
+	if(!strcmp(name, "smac", false))
+	{
+		smac=false;
+		Debug("Smac removed");
+	}
+}
+#endif
 
 public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ability_name, int status)
 {
@@ -322,11 +355,33 @@ public Action FF2_OnAbility2(int boss, const char[] plugin_name, const char[] ab
 
 public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
+	int boss;
 	for(int client; client<MaxClients; client++)
 	{
 		UberRageCount[client]=0.0;
 		FF2Flags[client]=0;
 		CloneOwnerIndex[client]=-1;
+		#if defined _smac_included
+		if(!HasSlowdown[client])
+		#else
+		if(smac && FindPluginByFile("smac_cvars.smx")!=INVALID_HANDLE && !HasSlowdown)
+		#endif
+		{
+			boss=FF2_GetBossIndex(client);
+			if(boss>=0)
+			{
+				if(FF2_HasAbility(boss, this_plugin_name, "rage_matrix_attack"))
+				{
+					#if defined _smac_included
+					HasSlowdown[client]=true;
+					#else
+					HasSlowdown=true;
+					ServerCommand("smac_removecvar sv_cheats");
+					ServerCommand("smac_removecvar host_timescale");
+					#endif
+				}
+			}
+		}
 	}
 
 	CreateTimer(0.30, Timer_GetBossTeam, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -360,9 +415,44 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 			CloneOwnerIndex[client]=-1;
 			FF2_SetFF2flags(client, FF2_GetFF2flags(client) & ~FF2FLAG_CLASSTIMERDISABLED);
 		}
+
+		#if defined _smac_included
+		if(HasSlowdown[client])
+			HasSlowdown[client]=false;
+		#else
+		if(smac && FindPluginByFile("smac_cvars.smx")!=INVALID_HANDLE && HasSlowdown)
+		{
+			HasSlowdown=false;
+			ServerCommand("smac_addcvar sv_cheats replicated ban 0 0");
+			ServerCommand("smac_addcvar host_timescale replicated ban 1.0 1.0");
+		}
+		#endif
 	}
 	return Plugin_Continue;
 }
+
+#if defined _smac_included
+public Action SMAC_OnCheatDetected(int client, const char[] module, DetectionType type, Handle info)
+{
+	Debug("SMAC: Cheat detected!");
+	if(type==Detection_CvarViolation)
+	{
+		Debug("SMAC: Cheat was a cvar violation!");
+		char cvar[PLATFORM_MAX_PATH];
+		KvGetString(info, "cvar", cvar, sizeof(cvar));
+		Debug("Cvar was %s", cvar);
+		if(StrEqual(cvar, "sv_cheats") || StrEqual(cvar, "host_timescale"))
+		{
+			if(HasSlowdown[client])
+			{
+				Debug("SMAC: Ignoring violation");
+				return Plugin_Stop;
+			}
+		}
+	}
+	return Plugin_Continue;
+}
+#endif
 
 public void OnClientDisconnect(int client)
 {
@@ -1074,7 +1164,7 @@ int DissolveRagdoll(int ragdoll)
 }
 
 
-/*	Clone	*/
+/*	Clone Attack	*/
 
 void Rage_Clone(const char[] ability_name, int boss)
 {
