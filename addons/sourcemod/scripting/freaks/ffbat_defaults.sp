@@ -31,17 +31,17 @@
 #include <tf2items>
 #include <freak_fortress_2>
 #include <freak_fortress_2_subplugin>
-#undef REQUIRE_PLUGIN
+//#undef REQUIRE_PLUGIN
 //#tryinclude <smac>
 //#tryinclude <freak_fortress_2_kstreak>
-#define REQUIRE_PLUGIN
+//#define REQUIRE_PLUGIN
 
 #pragma newdecls required
 
 #file "FF2 Unofficial Subplugin: Defaults"
 
 #define MAJOR_REVISION	"0"
-#define MINOR_REVISION	"2"
+#define MINOR_REVISION	"3"
 #define STABLE_REVISION	"0"
 #define PLUGIN_VERSION MAJOR_REVISION..."."...MINOR_REVISION..."."...STABLE_REVISION
 
@@ -176,7 +176,7 @@ public void OnLibraryAdded(const char[] name)
 	}
 }
 
-public OnLibraryRemoved(const char[] name)
+public void OnLibraryRemoved(const char[] name)
 {
 	if(!strcmp(name, "smac", false))
 	{
