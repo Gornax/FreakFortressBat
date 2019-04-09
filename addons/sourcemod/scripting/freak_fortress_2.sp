@@ -69,6 +69,8 @@ last time or to encourage others to do the same.
 
 #pragma newdecls required
 
+#file "Unofficial Freak Fortress 1.18.0"
+
 /*
     This fork uses a different versioning system
     as opposed to the public FF2 versioning system
