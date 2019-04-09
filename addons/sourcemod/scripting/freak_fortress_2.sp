@@ -12477,7 +12477,7 @@ public Action MusicTogglePanelCmd(int client, int args)
 			}
 			ToggleBGM(client, true);
 		}
-		CPrintToChat(client, "{olive}[FF2]{default} %t", "ff2_music", CheckSoundException(client, SOUNDEXCEPT_MUSIC) ? "off" : "on");	// TODO: Make this more multi-language friendly
+		CPrintToChat(client, "{olive}[FF2]{default} %t", "ff2_music", !CheckSoundException(client, SOUNDEXCEPT_MUSIC) ? "off" : "on");	// TODO: Make this more multi-language friendly
 		return Plugin_Handled;
 	}
 
