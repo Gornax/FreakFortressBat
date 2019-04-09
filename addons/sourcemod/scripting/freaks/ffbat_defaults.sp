@@ -38,6 +38,8 @@
 
 #pragma newdecls required
 
+#file "FF2 Unofficial Subplugin: Defaults"
+
 #define MAJOR_REVISION	"0"
 #define MINOR_REVISION	"2"
 #define STABLE_REVISION	"0"
@@ -111,7 +113,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public Plugin myinfo=
 {
-	name		=	"Unofficial Freak Fortress 2: New Defaults",
+	name		=	"Unofficial Freak Fortress 2: Defaults",
 	author		=	"Many many people",
 	description	=	"FF2: Combined subplugin of default abilties",
 	version		=	PLUGIN_VERSION
