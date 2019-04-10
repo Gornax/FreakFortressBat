@@ -17,7 +17,7 @@ env:
 jobs:
     include:
         allow_failures:
-            - SMVERSION=1.10
+            - env: SMVERSION=1.10
 
 # And compile!
 install:
