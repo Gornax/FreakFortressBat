@@ -15,9 +15,8 @@ env:
     - SMVERSION=1.10 # Newdecl Only
 
 jobs:
-    include:
-        allow_failures:
-            - env: SMVERSION=1.10
+    allow_failures:
+        - env: SMVERSION=1.10
 
 # And compile!
 install:
