@@ -9,9 +9,14 @@ addons:
 
 # Set the build environment
 env:
-    - SMVERSION=1.7 # Legacy
-    - SMVERSION=1.8 # Legacy
-    - SMVERSION=1.9 # Stable
+    - SMVERSION=1.7  # Legacy
+    - SMVERSION=1.8  # Legacy
+    - SMVERSION=1.9  # Stable
+    - SMVERSION=1.10 # Newdecl Only
+
+# Allow 1.10 to fail
+allow_failures:
+    - SMVERSION=1.10
 
 # And compile!
 install:
