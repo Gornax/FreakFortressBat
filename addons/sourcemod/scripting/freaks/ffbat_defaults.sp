@@ -32,9 +32,9 @@
 #include <freak_fortress_2>
 #include <freak_fortress_2_subplugin>
 #undef REQUIRE_PLUGIN
-#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=9
+//#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=9
 #tryinclude <smac>
-#endif
+//#endif
 //#tryinclude <freak_fortress_2_kstreak>
 #define REQUIRE_PLUGIN
 
