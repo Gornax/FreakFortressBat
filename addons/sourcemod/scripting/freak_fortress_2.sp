@@ -50,6 +50,7 @@ last time or to encourage others to do the same.
 #include <freak_fortress_2>
 #include <adt_array>
 #include <clientprefs>
+#include <morecolors>
 #include <sdkhooks>
 #include <tf2_stocks>
 #include <tf2items>
@@ -57,15 +58,12 @@ last time or to encourage others to do the same.
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
 #undef REQUIRE_PLUGIN
-#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=9
 //#tryinclude <smac>
 #tryinclude <goomba>
 #tryinclude <rtd>
-#tryinclude <tf2attributes>
-#tryinclude <morecolors>
-#tryinclude <updater>
-#endif
 #tryinclude <rtd2>
+#tryinclude <tf2attributes>
+#tryinclude <updater>
 #tryinclude <freak_fortress_2_kstreak>
 #define REQUIRE_PLUGIN
 
@@ -13904,101 +13902,6 @@ void SetClientGlow(int client, float time1, float time2=-1.0)
 		}
 	}
 }
-
-#if !defined _colors_included
-stock void CPrintToChat(int client, const char[] message, any ...)
-{
-	char buffer[MAX_BUFFER_LENGTH];
-	VFormat(buffer, sizeof(buffer), message, 2);
-	ReplaceString(buffer, maxlen, "{default}", "", false);
-	ReplaceString(buffer, maxlen, "{snow}", "", false);
-	ReplaceString(buffer, maxlen, "{teamcolor}", "", false);
-	ReplaceString(buffer, maxlen, "{red}", "", false);
-	ReplaceString(buffer, maxlen, "{blue}", "", false);
-	ReplaceString(buffer, maxlen, "{olive}", "", false);
-	ReplaceString(buffer, maxlen, "{darkorange}", "", false);
-	ReplaceString(buffer, maxlen, "{orange}", "", false);
-	PrintToChat(client, buffer);
-}
-
-stock void CPrintToChatAll(const char[] message, any ...)
-{
-	char buffer[MAX_BUFFER_LENGTH];
-	VFormat(buffer, sizeof(buffer), message, 2);
-	ReplaceString(buffer, maxlen, "{default}", "", false);
-	ReplaceString(buffer, maxlen, "{snow}", "", false);
-	ReplaceString(buffer, maxlen, "{teamcolor}", "", false);
-	ReplaceString(buffer, maxlen, "{red}", "", false);
-	ReplaceString(buffer, maxlen, "{blue}", "", false);
-	ReplaceString(buffer, maxlen, "{olive}", "", false);
-	ReplaceString(buffer, maxlen, "{darkorange}", "", false);
-	ReplaceString(buffer, maxlen, "{orange}", "", false);
-	PrintToChatAll(buffer);
-}
-
-stock void CReplyToCommand(int client, const char[] message, any ...)
-{
-	char buffer[MAX_BUFFER_LENGTH];
-	VFormat(buffer, sizeof(buffer), message, 2);
-	ReplaceString(buffer, maxlen, "{default}", "", false);
-	ReplaceString(buffer, maxlen, "{snow}", "", false);
-	ReplaceString(buffer, maxlen, "{teamcolor}", "", false);
-	ReplaceString(buffer, maxlen, "{red}", "", false);
-	ReplaceString(buffer, maxlen, "{blue}", "", false);
-	ReplaceString(buffer, maxlen, "{olive}", "", false);
-	ReplaceString(buffer, maxlen, "{darkorange}", "", false);
-	ReplaceString(buffer, maxlen, "{orange}", "", false);
-	if(GetCmdReplySource()==SM_REPLY_TO_CONSOLE)
-	{
-		PrintToConsole(client, "%s", buffer);
-	}
-	else
-	{
-		CPrintToChat(client, "%s", buffer);
-	}
-}
-
-stock void CRemoveTags(char[] message, int maxlen)
-{
-	char buffer[MAX_BUFFER_LENGTH];
-	VFormat(buffer, sizeof(buffer), message, 2);
-	ReplaceString(buffer, maxlen, "{default}", "", false);
-	ReplaceString(buffer, maxlen, "{snow}", "", false);
-	ReplaceString(buffer, maxlen, "{teamcolor}", "", false);
-	ReplaceString(buffer, maxlen, "{red}", "", false);
-	ReplaceString(buffer, maxlen, "{blue}", "", false);
-	ReplaceString(buffer, maxlen, "{olive}", "", false);
-	ReplaceString(buffer, maxlen, "{darkorange}", "", false);
-	ReplaceString(buffer, maxlen, "{orange}", "", false);
-	PrintToChat(client, buffer);
-}
-
-stock void CReplaceColorCodes(char[] buffer, bool removeTags=false, int maxlen=MAX_BUFFER_LENGTH)
-{
-	if(removeTags)
-	{
-		ReplaceString(buffer, maxlen, "{default}", "", false);
-		ReplaceString(buffer, maxlen, "{snow}", "", false);
-		ReplaceString(buffer, maxlen, "{teamcolor}", "", false);
-		ReplaceString(buffer, maxlen, "{red}", "", false);
-		ReplaceString(buffer, maxlen, "{blue}", "", false);
-		ReplaceString(buffer, maxlen, "{olive}", "", false);
-		ReplaceString(buffer, maxlen, "{darkorange}", "", false);
-		ReplaceString(buffer, maxlen, "{orange}", "", false);
-	}
-	else
-	{
-		ReplaceString(buffer, maxlen, "{default}", "\x01", false);
-		ReplaceString(buffer, maxlen, "{snow}", "\x01", false);
-		ReplaceString(buffer, maxlen, "{teamcolor}", "\x03", false);
-		ReplaceString(buffer, maxlen, "{red}", "\x05", false);
-		ReplaceString(buffer, maxlen, "{blue}", "\x05", false);
-		ReplaceString(buffer, maxlen, "{olive}", "\x05", false);
-		ReplaceString(buffer, maxlen, "{darkorange}", "\x05", false);
-		ReplaceString(buffer, maxlen, "{orange}", "\x05", false);
-	}
-}
-#endif
 
 #include <freak_fortress_2_vsh_feedback>
 
