@@ -13828,7 +13828,9 @@ public int CheckRoundState()
 			return 2;
 		}
 	}
+	#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=9
 	return -1;  //Compiler bug-doesn't recognize 'default' as a valid catch-all
+	#endif
 }
 
 void FindHealthBar()
