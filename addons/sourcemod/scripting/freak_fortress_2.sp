@@ -75,8 +75,9 @@ last time or to encourage others to do the same.
 
 /*
     Enable or disable certain modules.
+     Comment out to disable a module.
 */
-#define CHANGELOG true
+#define CHANGELOG 1
 
 /*
      This fork uses a different versioning system
@@ -543,7 +544,7 @@ char bLog[PLATFORM_MAX_PATH];
 char pLog[PLATFORM_MAX_PATH];
 
 // Modules
-#if CHANGELOG
+#if defined CHANGELOG
 #include "freak_fortress_2/changelog.sp"
 #endif
 
@@ -740,7 +741,7 @@ public void OnPluginStart()
 	RegConsoleCmd("hale_boss", Command_SetMyBoss, "View FF2 Boss Preferences");
 	RegConsoleCmd("haleboss", Command_SetMyBoss, "View FF2 Boss Preferences");
 
-	#if CHANGELOG
+	#if defined CHANGELOG
 	RegConsoleCmd("ff2_new", NewPanelCmd, "View FF2 changelog");
 	RegConsoleCmd("ff2new", NewPanelCmd, "View FF2 changelog");
 	RegConsoleCmd("hale_new", NewPanelCmd, "View FF2 changelog");
@@ -1995,7 +1996,7 @@ public Action Timer_Announce(Handle timer)
 			{
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ServerAd");
 			}
-			#if CHANGELOG
+			#if defined CHANGELOG
 			case 2:
 			{
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
@@ -10757,7 +10758,7 @@ public int FF2PanelH(Handle menu, MenuAction action, int client, int selection)
 				}
 				case 3:
 				{
-					#if CHANGELOG
+					#if defined CHANGELOG
 					NewPanel(client, maxVersion);
 					#endif
 				}
@@ -10799,7 +10800,7 @@ public Action FF2Panel(int client, int args)  //._.
 		Format(text, sizeof(text), "%T", "menu_7", client);  //Changes to my class in FF2 (/ff2classinfo)
 		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_4", client);  //What's new? (/ff2new).
-		#if CHANGELOG
+		#if defined CHANGELOG
 		AddMenuItem(menu, text, text);
 		#else
 		AddMenuItem(menu, text, text, ITEMDRAW_DISABLED);
