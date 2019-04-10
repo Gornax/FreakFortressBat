@@ -63,7 +63,9 @@ last time or to encourage others to do the same.
 //#tryinclude <smac>
 #tryinclude <goomba>
 #tryinclude <rtd>
+#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=9
 #tryinclude <rtd2>
+#endif
 #tryinclude <tf2attributes>
 #tryinclude <updater>
 #tryinclude <freak_fortress_2_kstreak>
