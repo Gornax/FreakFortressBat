@@ -54,9 +54,11 @@ last time or to encourage others to do the same.
 #include <sdkhooks>
 #include <tf2_stocks>
 #include <tf2items>
+#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=9
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
+#endif
 #undef REQUIRE_PLUGIN
 //#tryinclude <smac>
 #tryinclude <goomba>
