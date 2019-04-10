@@ -76,7 +76,7 @@ last time or to encourage others to do the same.
 /*
     Enable or disable certain modules.
 */
-#define CHANGELOG false
+#define CHANGELOG true
 
 /*
      This fork uses a different versioning system
@@ -10802,7 +10802,7 @@ public Action FF2Panel(int client, int args)  //._.
 		#if CHANGELOG
 		AddMenuItem(menu, text, text);
 		#else
-		AddMenuItem(menu, text, text, DISABLED);
+		AddMenuItem(menu, text, text, ITEMDRAW_DISABLED);
 		#endif
 		Format(text, sizeof(text), "%T", "menu_5", client);  //Queue points
 		AddMenuItem(menu, text, text);
