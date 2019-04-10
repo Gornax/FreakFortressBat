@@ -31,10 +31,12 @@
 #include <tf2items>
 #include <freak_fortress_2>
 #include <freak_fortress_2_subplugin>
-//#undef REQUIRE_PLUGIN
-//#tryinclude <smac>
+#undef REQUIRE_PLUGIN
+#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=9
+#tryinclude <smac>
+#endif
 //#tryinclude <freak_fortress_2_kstreak>
-//#define REQUIRE_PLUGIN
+#define REQUIRE_PLUGIN
 
 #pragma newdecls required
 
