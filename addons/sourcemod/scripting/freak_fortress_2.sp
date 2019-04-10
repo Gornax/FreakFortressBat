@@ -173,7 +173,6 @@ int Special[MAXPLAYERS+1];
 int Incoming[MAXPLAYERS+1];
 
 int Damage[MAXPLAYERS+1];
-int curHelp[MAXPLAYERS+1];
 int uberTarget[MAXPLAYERS+1];
 bool hadshield[MAXPLAYERS+1];
 int shield[MAXPLAYERS+1];
@@ -10734,85 +10733,88 @@ void DoOverlay(int client, const char[] overlay)
 
 public int FF2PanelH(Handle menu, MenuAction action, int client, int selection)
 {
-	if(action==MenuAction_Select)
+	switch(action)
 	{
-		switch(selection)
+		case MenuAction_End:
 		{
-			case 1:
+			CloseHandle(menu);
+		}
+		case MenuAction_Select:
+		{
+			switch(selection)
 			{
-				Command_GetHP(client);
-			}
-			case 2:
-			{
-				Command_SetMyBoss(client, 0);
-			}
-			case 3:
-			{
-				HelpPanelClass(client);
-			}
-			case 4:
-			{
-				#if CHANGELOG
-				NewPanel(client, maxVersion);
-				#endif
-			}
-			case 5:
-			{
-				QueuePanelCmd(client, 0);
-			}
-			case 6:
-			{
-				MusicTogglePanel(client);
-			}
-			case 7:
-			{
-				VoiceTogglePanel(client);
-			}
-			case 8:
-			{
-				HelpPanel3(client);
-			}
-			default:
-			{
-				return;
+				case 0:
+				{
+					Command_GetHP(client);
+				}
+				case 1:
+				{
+					Command_SetMyBoss(client, 0);
+				}
+				case 2:
+				{
+					HelpPanelClass(client);
+				}
+				case 3:
+				{
+					#if CHANGELOG
+					NewPanel(client, maxVersion);
+					#endif
+				}
+				case 4:
+				{
+					QueuePanelCmd(client, 0);
+				}
+				case 5:
+				{
+					MusicTogglePanel(client);
+				}
+				case 6:
+				{
+					VoiceTogglePanel(client);
+				}
+				case 7:
+				{
+					HelpPanel3(client);
+				}
 			}
 		}
 	}
+	return;
 }
 
 public Action FF2Panel(int client, int args)  //._.
 {
 	if(Enabled2 && IsValidClient(client, false))
 	{
-		Handle panel=CreatePanel();
+		Handle menu=CreateMenu(FF2PanelH);
 		char text[256];
 		SetGlobalTransTarget(client);
 		Format(text, sizeof(text), "%T", "menu_1", client);  //What's up?
-		SetPanelTitle(panel, text);
+		SetMenuTitle(menu, text);
 		Format(text, sizeof(text), "%T", "menu_2", client);  //Investigate the boss's current health level (/ff2hp)
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_3", client);  //Boss Preferences (/ff2boss)
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_7", client);  //Changes to my class in FF2 (/ff2classinfo)
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_4", client);  //What's new? (/ff2new).
 		#if CHANGELOG
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		#else
-		DrawPanelItem(panel, text, DISABLED);
+		AddMenuItem(menu, text, text, DISABLED);
 		#endif
 		Format(text, sizeof(text), "%T", "menu_5", client);  //Queue points
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_8", client);  //Toggle music (/ff2music)
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_9", client);  //Toggle monologues (/ff2voice)
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_9a", client);  //Toggle info about changes of classes in FF2
-		DrawPanelItem(panel, text);
+		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_6", client);  //Exit
-		DrawPanelItem(panel, text);
-		SendPanelToClient(panel, client, FF2PanelH, MENU_TIME_FOREVER);
-		CloseHandle(panel);
+		AddMenuItem(menu, text, text);
+		DisplayMenu(menu, client, MENU_TIME_FOREVER);
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
