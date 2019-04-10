@@ -75,9 +75,8 @@ last time or to encourage others to do the same.
 
 /*
     Enable or disable certain modules.
-     Comment out to disable a module.
 */
-#define CHANGELOG 1
+#define CHANGELOG true
 
 /*
      This fork uses a different versioning system
@@ -544,7 +543,7 @@ char bLog[PLATFORM_MAX_PATH];
 char pLog[PLATFORM_MAX_PATH];
 
 // Modules
-#if defined CHANGELOG
+#if CHANGELOG
 #include "freak_fortress_2/changelog.sp"
 #endif
 
@@ -1996,7 +1995,7 @@ public Action Timer_Announce(Handle timer)
 			{
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ServerAd");
 			}
-			#if defined CHANGELOG
+			#if CHANGELOG
 			case 2:
 			{
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
@@ -10758,7 +10757,7 @@ public int FF2PanelH(Handle menu, MenuAction action, int client, int selection)
 				}
 				case 3:
 				{
-					#if defined CHANGELOG
+					#if CHANGELOG
 					NewPanel(client, maxVersion);
 					#endif
 				}
@@ -10800,7 +10799,7 @@ public Action FF2Panel(int client, int args)  //._.
 		Format(text, sizeof(text), "%T", "menu_7", client);  //Changes to my class in FF2 (/ff2classinfo)
 		AddMenuItem(menu, text, text);
 		Format(text, sizeof(text), "%T", "menu_4", client);  //What's new? (/ff2new).
-		#if defined CHANGELOG
+		#if CHANGELOG
 		AddMenuItem(menu, text, text);
 		#else
 		AddMenuItem(menu, text, text, ITEMDRAW_DISABLED);
