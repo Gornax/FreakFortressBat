@@ -1996,10 +1996,12 @@ public Action Timer_Announce(Handle timer)
 			{
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ServerAd");
 			}
+			#if CHANGELOG
 			case 2:
 			{
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
 			}
+			#endif
 			case 3:
 			{
 				CPrintToChatAll("{olive}[FF2]{default} %t", "ClassicAd");
@@ -10750,7 +10752,9 @@ public int FF2PanelH(Handle menu, MenuAction action, int client, int selection)
 			}
 			case 4:
 			{
+				#if CHANGELOG
 				NewPanel(client, maxVersion);
+				#endif
 			}
 			case 5:
 			{
@@ -10811,84 +10815,6 @@ public Action FF2Panel(int client, int args)  //._.
 		CloseHandle(panel);
 		return Plugin_Handled;
 	}
-	return Plugin_Continue;
-}
-
-public int NewPanelH(Handle menu, MenuAction action, int param1, int param2)
-{
-	if(action==MenuAction_Select)
-	{
-		switch(param2)
-		{
-			case 1:
-			{
-				if(curHelp[param1]<=0)
-					NewPanel(param1, 0);
-				else
-					NewPanel(param1, --curHelp[param1]);
-			}
-			case 2:
-			{
-				if(curHelp[param1]>=maxVersion)
-					NewPanel(param1, maxVersion);
-				else
-					NewPanel(param1, ++curHelp[param1]);
-			}
-			default: return;
-		}
-	}
-}
-
-public Action NewPanelCmd(int client, int args)
-{
-	if(!IsValidClient(client))
-	{
-		return Plugin_Continue;
-	}
-
-	NewPanel(client, maxVersion);
-	return Plugin_Handled;
-}
-
-public Action NewPanel(int client, int versionIndex)
-{
-	if(!Enabled2)
-	{
-		return Plugin_Continue;
-	}
-
-	curHelp[client]=versionIndex;
-	Handle panel=CreatePanel();
-	char whatsNew[90];
-
-	SetGlobalTransTarget(client);
-	Format(whatsNew, 90, "=%t:=", "whatsnew", ff2versiontitles[versionIndex], ff2versiondates[versionIndex]);
-	SetPanelTitle(panel, whatsNew);
-	FindVersionData(panel, versionIndex);
-	if(versionIndex>0)
-	{
-		Format(whatsNew, 90, "%t", "older");
-	}
-	else
-	{
-		Format(whatsNew, 90, "%t", "noolder");
-	}
-
-	DrawPanelItem(panel, whatsNew);
-	if(versionIndex<maxVersion)
-	{
-		Format(whatsNew, 90, "%t", "newer");
-	}
-	else
-	{
-		Format(whatsNew, 90, "%t", "nonewer");
-	}
-
-	DrawPanelItem(panel, whatsNew);
-	Format(whatsNew, 512, "%T", "menu_6", client);
-	DrawPanelItem(panel, whatsNew);
-	SendPanelToClient(panel, client, NewPanelH, MENU_TIME_FOREVER);
-	CloseHandle(panel);
 	return Plugin_Continue;
 }
 
