@@ -435,6 +435,14 @@ public Plugin myinfo=
 	url		=	"https://forums.alliedmods.net/forumdisplay.php?f=154",
 };
 
+/*
+     Enable or disable certain modules
+    Set to false or comment out #define
+          Comment out #include
+*/
+#define CHANGELOG true
+#include "freak_fortress_2/changelog.sp"
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	char plugin[PLATFORM_MAX_PATH];
@@ -536,14 +544,6 @@ bool InfiniteRageActive[MAXPLAYERS+1]=false;
 // Boss Log
 char bLog[PLATFORM_MAX_PATH];
 char pLog[PLATFORM_MAX_PATH];
-
-/*
-     Enable or disable certain modules
-    Set to false or comment out #define
-          Comment out #include
-*/
-#define CHANGELOG true
-#include "freak_fortress_2/changelog.sp"
 
 public void OnPluginStart()
 {
