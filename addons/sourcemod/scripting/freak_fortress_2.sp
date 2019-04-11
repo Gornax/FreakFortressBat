@@ -74,9 +74,12 @@ last time or to encourage others to do the same.
 #pragma newdecls required
 
 /*
-    Enable or disable certain modules.
+     Enable or disable certain modules
+    Set to false or comment out #define
+          Comment out #include
 */
 #define CHANGELOG true
+#include "freak_fortress_2/changelog.sp"
 
 /*
      This fork uses a different versioning system
@@ -541,11 +544,6 @@ bool InfiniteRageActive[MAXPLAYERS+1]=false;
 // Boss Log
 char bLog[PLATFORM_MAX_PATH];
 char pLog[PLATFORM_MAX_PATH];
-
-// Modules
-#if CHANGELOG
-#include "freak_fortress_2/changelog.sp"
-#endif
 
 public void OnPluginStart()
 {
