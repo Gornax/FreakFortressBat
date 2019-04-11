@@ -74,6 +74,11 @@ last time or to encourage others to do the same.
 #pragma newdecls required
 
 /*
+	Enable or disable certain modules
+*/
+#define CHANGELOG 1
+
+/*
      This fork uses a different versioning system
     as opposed to the public FF2 versioning system.
 */
@@ -426,6 +431,11 @@ char ChancesString[512];
 int chances[MAXSPECIALS*2];  //This is multiplied by two because it has to hold both the boss indices and chances
 int chancesIndex;
 
+#if CHANGELOG
+int curHelp[MAXPLAYERS+1];
+static const int maxVersion=sizeof(ff2versiontitles)-1;
+#endif
+
 public Plugin myinfo=
 {
 	name		=	"Freak Fortress 2",
@@ -434,14 +444,6 @@ public Plugin myinfo=
 	version		=	PLUGIN_VERSION,
 	url		=	"https://forums.alliedmods.net/forumdisplay.php?f=154",
 };
-
-/*
-     Enable or disable certain modules
-    Set to false or comment out #define
-          Comment out #include
-*/
-#define CHANGELOG true
-#include "freak_fortress_2/changelog.sp"
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -544,6 +546,11 @@ bool InfiniteRageActive[MAXPLAYERS+1]=false;
 // Boss Log
 char bLog[PLATFORM_MAX_PATH];
 char pLog[PLATFORM_MAX_PATH];
+
+// Modules
+#if CHANGELOG
+#include "freak_fortress_2/changelog.sp"
+#endif
 
 public void OnPluginStart()
 {
