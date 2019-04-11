@@ -10748,7 +10748,7 @@ public int FF2PanelH(Handle menu, MenuAction action, int client, int selection)
 				case 3:
 				{
 					#if CHANGELOG
-					NewPanel(client);
+					NewPanel(client, -1);
 					#endif
 				}
 				case 4:
