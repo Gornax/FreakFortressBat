@@ -11,13 +11,11 @@
 		FF2 Panel:
 		- What's new?
 		
-		Global Variables:
-		- curhelp
-		- maxVersion
-		
 		Local Variables:
+		- curhelp
 		- ff2versiontitles
 		- ff2versiondates
+		- maxVersion
 		
 		Stocks:
 		- FindVersionData
@@ -26,7 +24,10 @@
 		- NewPanelH
 		- NewPanelCmd
 		- NewPanel
+		- Timer_LastUpdate
 */
+
+int curHelp[MAXPLAYERS+1];
 
 static const char ff2versiontitles[][]=
 {
@@ -1310,6 +1311,8 @@ stock void FindVersionData(Handle panel, int versionIndex)
 	}
 }
 
+static const int maxVersion=sizeof(ff2versiontitles)-1;
+
 public int NewPanelH(Handle menu, MenuAction action, int param1, int param2)
 {
 	if(action==MenuAction_Select)
@@ -1346,14 +1349,16 @@ public Action NewPanelCmd(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action NewPanel(int client, int versionIndex)
+public Action NewPanel(int client, int versionIndex=-1)
 {
 	if(!Enabled2)
-	{
 		return Plugin_Continue;
-	}
 
-	curHelp[client]=versionIndex;
+	if(versionIndex<0)
+		curHelp[client]=maxVersion;
+	else
+		curHelp[client]=versionIndex;
+
 	Handle panel=CreatePanel();
 	char whatsNew[90];
 
@@ -1385,6 +1390,19 @@ public Action NewPanel(int client, int versionIndex)
 	DrawPanelItem(panel, whatsNew);
 	SendPanelToClient(panel, client, NewPanelH, MENU_TIME_FOREVER);
 	CloseHandle(panel);
+	return Plugin_Continue;
+}
+
+public Action Timer_LastUpdate(Handle timer, int client=0)
+{
+	if(Announce>1.0 && Enabled2)
+	{
+		if(client)
+			CPrintToChat(client, "{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
+		else
+			CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
+	}
+
 	return Plugin_Continue;
 }
 
