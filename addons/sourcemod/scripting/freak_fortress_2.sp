@@ -431,10 +431,6 @@ char ChancesString[512];
 int chances[MAXSPECIALS*2];  //This is multiplied by two because it has to hold both the boss indices and chances
 int chancesIndex;
 
-#if CHANGELOG
-int curHelp[MAXPLAYERS+1];
-#endif
-
 public Plugin myinfo=
 {
 	name		=	"Freak Fortress 2",
@@ -549,7 +545,6 @@ char pLog[PLATFORM_MAX_PATH];
 // Modules
 #if CHANGELOG
 #include "freak_fortress_2/changelog.sp"
-static const int maxVersion=sizeof(ff2versiontitles)-1;
 #endif
 
 public void OnPluginStart()
@@ -2003,7 +1998,7 @@ public Action Timer_Announce(Handle timer)
 			#if CHANGELOG
 			case 2:
 			{
-				CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
+				CreateTimer(0.0, Timer_LastUpdate, _, TIMER_FLAG_NO_MAPCHANGE);
 			}
 			#endif
 			case 3:
@@ -2016,11 +2011,6 @@ public Action Timer_Announce(Handle timer)
 				{
 					CPrintToChatAll("{olive}[FF2]{default} %t", "FF2 Toggle Command");
 				}
-				else					// Guess not, play the 4th thing and next is 5
-				{
-					announcecount=5;
-					CPrintToChatAll("{olive}[FF2]{default} %t", "DevAd", PLUGIN_VERSION);
-				}
 			}
 			case 5:
 			{
@@ -2031,11 +2021,6 @@ public Action Timer_Announce(Handle timer)
 				if(GetConVarBool(cvarDuoBoss))		// Companion Toggle?
 				{
 					CPrintToChatAll("{olive}[FF2]{default} %t", "FF2 Companion Command");
-				}
-				else					// Guess not either, play the last thing and next is 0
-				{
-					announcecount=0;
-					CPrintToChatAll("{olive}[FF2]{default} %t", "type_ff2_to_open_menu");
 				}
 			}
 			default:
@@ -10763,7 +10748,7 @@ public int FF2PanelH(Handle menu, MenuAction action, int client, int selection)
 				case 3:
 				{
 					#if CHANGELOG
-					NewPanel(client, maxVersion);
+					NewPanel(client);
 					#endif
 				}
 				case 4:
