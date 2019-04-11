@@ -433,7 +433,6 @@ int chancesIndex;
 
 #if CHANGELOG
 int curHelp[MAXPLAYERS+1];
-static const int maxVersion=sizeof(ff2versiontitles)-1;
 #endif
 
 public Plugin myinfo=
@@ -550,6 +549,7 @@ char pLog[PLATFORM_MAX_PATH];
 // Modules
 #if CHANGELOG
 #include "freak_fortress_2/changelog.sp"
+static const int maxVersion=sizeof(ff2versiontitles)-1;
 #endif
 
 public void OnPluginStart()
