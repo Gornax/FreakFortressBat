@@ -1,6 +1,6 @@
 /*
     Changelog:
-	Shows new or older features of FF2 updates.
+	List of changes in Freak Fortress 2
 
 		Commands:
 		- ff2_new
@@ -13,12 +13,20 @@
 		
 		Global Variables:
 		- curhelp
+		- maxVersion
+		
+		Local Variables:
 		- ff2versiontitles
 		- ff2versiondates
-		- maxVersion
+		
+		Stocks:
+		- FindVersionData
+		
+		Public:
+		- NewPanelH
+		- NewPanelCmd
+		- NewPanel
 */
-
-int curHelp[MAXPLAYERS+1];
 
 static const char ff2versiontitles[][]=
 {
@@ -1302,8 +1310,6 @@ stock void FindVersionData(Handle panel, int versionIndex)
 	}
 }
 
-static const int maxVersion=sizeof(ff2versiontitles)-1;
-
 public int NewPanelH(Handle menu, MenuAction action, int param1, int param2)
 {
 	if(action==MenuAction_Select)
@@ -1381,3 +1387,9 @@ public Action NewPanel(int client, int versionIndex)
 	CloseHandle(panel);
 	return Plugin_Continue;
 }
+
+#if !CHANGELOG
+#error "Changelog is disabled but used?"
+#endif
+
+#file "FF2 Module: Changelog"
