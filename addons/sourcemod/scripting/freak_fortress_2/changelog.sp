@@ -1349,7 +1349,7 @@ public Action NewPanelCmd(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action NewPanel(int client, int versionIndex=-1)
+public Action NewPanel(int client, int versionIndex)
 {
 	if(!Enabled2)
 		return Plugin_Continue;
@@ -1393,14 +1393,11 @@ public Action NewPanel(int client, int versionIndex=-1)
 	return Plugin_Continue;
 }
 
-public Action Timer_LastUpdate(Handle timer, int client=0)
+public Action Timer_LastUpdate(Handle timer)
 {
 	if(Announce>1.0 && Enabled2)
 	{
-		if(client)
-			CPrintToChat(client, "{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
-		else
-			CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
+		CPrintToChatAll("{olive}[FF2]{default} %t", "ff2_last_update", PLUGIN_VERSION, ff2versiondates[maxVersion]);
 	}
 
 	return Plugin_Continue;
