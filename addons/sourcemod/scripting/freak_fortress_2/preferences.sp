@@ -1,3 +1,6 @@
+#define PREF_DUO	2
+#define PREF_BOSS	3
+
 #define TOGGLE_UNDEF	0
 #define TOGGLE_ON	1
 #define TOGGLE_OFF	2
@@ -161,13 +164,9 @@ int GetClientPreferences(int client, int type)
 	char cookieValues[8][5];
 	GetClientCookie(client, FF2Cookies, cookies, sizeof(cookies));
 	ExplodeString(cookies, " ", cookieValues, 8, 5);
-	if(type==PREF_COMPANION)
+	if(type==PREF_DUO)
 	{
 		return StringToInt(cookieValues[4][0]);
-	}
-	else if(type==PREF_LASTBOSS)
-	{
-		return cookieValues[7][0]);
 	}
 	else
 	{
@@ -177,7 +176,7 @@ int GetClientPreferences(int client, int type)
 	SetClientCookie(client, FF2Cookies, cookies);
 }
 
-int SetClientPreferences(int client, int type, int enable)
+void SetClientPreferences(int client, int type, int enable)
 {
 	if(!IsValidClient(client) || IsFakeClient(client) || !AreClientCookiesCached(client))
 	{
@@ -188,7 +187,7 @@ int SetClientPreferences(int client, int type, int enable)
 	char cookieValues[8][5];
 	GetClientCookie(client, FF2Cookies, cookies, sizeof(cookies));
 	ExplodeString(cookies, " ", cookieValues, 8, 5);
-	if(type==TOGGLE_COMPANION)
+	if(type==PREF_DUO)
 	{
 		if(TOGGLE_ON)
 		{
@@ -197,10 +196,12 @@ int SetClientPreferences(int client, int type, int enable)
 		else if(TOGGLE_OFF)
 		{
 			cookieValues[4][0]='2';
+			xIncoming[client] = "";
 		}
 		else if(TOGGLE_TEMP)
 		{
 			cookieValues[4][0]='3';
+			xIncoming[client] = "";
 		}
 		else
 		{
@@ -216,10 +217,12 @@ int SetClientPreferences(int client, int type, int enable)
 		else if(TOGGLE_OFF)
 		{
 			cookieValues[5][0]='2';
+			xIncoming[param1] = "";
 		}
 		else if(TOGGLE_TEMP)
 		{
 			cookieValues[5][0]='3';
+			xIncoming[param1] = "";
 		}
 		else
 		{
@@ -280,7 +283,7 @@ public Action Command_SetMyBoss(int client, int args)
 					CReplyToCommand(client, "{olive}[FF2]{default} %t", "deny_duo_short");
 					return Plugin_Handled;
 				}
-				if(strlen(companionName) && (ClientCookie2[client]==TOGGLE_OFF || ClientCookie2[client]==TOGGLE_TEMP) && GetConVarBool(cvarDuoBoss))
+				if(strlen(companionName) && GetConVarBool(cvarDuoBoss) && GetClientPreferences(client, PREF_DUO)>1)
 				{
 					CReplyToCommand(client, "{olive}[FF2]{default} %t", "deny_duo_off");
 					return Plugin_Handled;
@@ -324,7 +327,7 @@ public Action Command_SetMyBoss(int client, int args)
 					CReplyToCommand(client, "{olive}[FF2]{default} %t", "deny_duo_short");
 					return Plugin_Handled;
 				}
-				if(strlen(companionName) && (ClientCookie2[client]==TOGGLE_OFF || ClientCookie2[client]==TOGGLE_TEMP) && GetConVarBool(cvarDuoBoss))
+				if(strlen(companionName) && GetConVarBool(cvarDuoBoss) && GetClientPreferences(client, PREF_DUO)>1)
 				{
 					CReplyToCommand(client, "{olive}[FF2]{default} %t", "deny_duo_off");
 					return Plugin_Handled;
@@ -358,28 +361,27 @@ public Action Command_SetMyBoss(int client, int args)
 	char boss[64];
 	Handle dMenu = CreateMenu(Command_SetMyBossH);
 
-	SetMenuTitle(dMenu, "%T", "ff2_boss_selection", client, xIncoming[client]);
+	SetGlobalTransTarget(client);
+	SetMenuTitle(dMenu, "%t", "ff2_boss_selection", xIncoming[client]);
 	
 	Format(boss, sizeof(boss), "%T", "to0_random", client);
 	AddMenuItem(dMenu, boss, boss);
 	
 	if(GetConVarBool(cvarToggleBoss))
 	{
-		if(ClientCookie[client] == TOGGLE_ON || ClientCookie[client] == TOGGLE_UNDEF)
-			Format(boss, sizeof(boss), "%T", "to0_disablepts", client);
-
+		if(GetClientPreferences(client, PREF_BOSS)>1)
+			Format(boss, sizeof(boss), "%t", "to0_enablepts");
 		else
-			Format(boss, sizeof(boss), "%T", "to0_enablepts", client);
+			Format(boss, sizeof(boss), "%t", "to0_disablepts");
 
 		AddMenuItem(dMenu, boss, boss);
 	}
 	if(GetConVarBool(cvarDuoBoss))
 	{
-		if(ClientCookie2[client] == TOGGLE_ON || ClientCookie2[client] == TOGGLE_UNDEF)
-			Format(boss, sizeof(boss), "%T", "to0_disableduo", client);
-
+		if(GetClientPreferences(client, PREF_DUO)>1)
+			Format(boss, sizeof(boss), "%t", "to0_enableduo");
 		else
-			Format(boss, sizeof(boss), "%T", "to0_enableduo", client);
+			Format(boss, sizeof(boss), "%t", "to0_disableduo");
 
 		AddMenuItem(dMenu, boss, boss);
 	}
@@ -387,11 +389,11 @@ public Action Command_SetMyBoss(int client, int args)
 	if(kmerge && CheckCommandAccess(client, "ff2_kstreak_a", 0, true))
 	{
 		if(FF2_KStreak_GetCookies(client, 0)==1)
-			Format(boss, sizeof(boss), "%T", "to0_disablekstreak", client);
+			Format(boss, sizeof(boss), "%t", "to0_disablekstreak");
 		else if(FF2_KStreak_GetCookies(client, 0)<1)
-			Format(boss, sizeof(boss), "%T", "to0_enablekstreak", client);
+			Format(boss, sizeof(boss), "%t", "to0_enablekstreak");
 		else
-			Format(boss, sizeof(boss), "%T", "to0_togglekstreak", client);
+			Format(boss, sizeof(boss), "%t", "to0_togglekstreak");
 
 		AddMenuItem(dMenu, boss, boss);
 	}
@@ -410,7 +412,11 @@ public Action Command_SetMyBoss(int client, int args)
 		KvGetString(BossKV[config], "name", boss, sizeof(boss));
 		if((KvGetNum(BossKV[config], "donator", 0) && !CheckCommandAccess(client, "ff2_donator_bosses", ADMFLAG_RESERVATION, true)) ||
 		   (KvGetNum(BossKV[config], "nofirst", 0) && (RoundCount<arenaRounds || (RoundCount==arenaRounds && CheckRoundState()!=1))) ||
-		   (strlen(companionName) && (!DuoMin || ((ClientCookie2[client]==TOGGLE_OFF || ClientCookie2[client]==TOGGLE_TEMP) && GetConVarBool(cvarDuoBoss)))))
+		   (strlen(companionName) && !DuoMin))
+		{
+			AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
+		}
+		else if(AreClientCookiesCached(client) && strlen(companionName) && GetConVarBool(cvarDuoBoss) && GetClientPreferences(client, PREF_DUO)>1)
 		{
 			AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
 		}
@@ -579,6 +585,7 @@ public Action ConfirmBoss(int client)
 	char text[512], language[20], boss[64];
 	GetLanguageInfo(GetClientLanguage(client), language, 8, text, 8);
 	Format(language, sizeof(language), "description_%s", language);
+	SetGlobalTransTarget(client);
 		
 	for(int config; config<Specials; config++)
 	{
@@ -593,7 +600,7 @@ public Action ConfirmBoss(int client)
 				KvGetString(BossKV[config], "description_en", text, sizeof(text));  //Default to English if their language isn't available
 				if(!text[0])
 				{
-					Format(text, sizeof(text), "%T", "to0_nodesc", client);
+					Format(text, sizeof(text), "%t", "to0_nodesc");
 				}
 			}
 			ReplaceString(text, sizeof(text), "\\n", "\n");
@@ -603,10 +610,10 @@ public Action ConfirmBoss(int client)
 	Handle dMenu = CreateMenu(ConfirmBossH);
 	SetMenuTitle(dMenu, text);
 
-	Format(text, sizeof(text), "%T", "to0_confirm", client, cIncoming[client]);
+	Format(text, sizeof(text), "%t", "to0_confirm", cIncoming[client]);
 	AddMenuItem(dMenu, text, text);
 
-	Format(text, sizeof(text), "%T", "to0_cancel", client);
+	Format(text, sizeof(text), "%t", "to0_cancel");
 	AddMenuItem(dMenu, text, text);
 
 	SetMenuExitButton(dMenu, false);
@@ -818,3 +825,9 @@ stock int GetRandomValidClient(bool[] omit)
 	}
 	return companion;
 }
+
+#if !PREFERENCES
+#error "Preferences is disabled but used?"
+#endif
+
+#file "FF2 Module: Preferences"
