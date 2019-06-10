@@ -78,11 +78,11 @@ last time or to encourage others to do the same.
 */
 #define FORK_MAJOR_REVISION "1"
 #define FORK_MINOR_REVISION "18"
-#define FORK_STABLE_REVISION "5"
+#define FORK_STABLE_REVISION "6"
 #define FORK_SUB_REVISION "Unofficial"
-//#define FORK_DEV_REVISION "Build"
+#define FORK_DEV_REVISION "Build"
 
-#define BUILD_NUMBER FORK_MINOR_REVISION...""...FORK_STABLE_REVISION..."032"
+#define BUILD_NUMBER FORK_MINOR_REVISION...""...FORK_STABLE_REVISION..."000"
 
 #if !defined FORK_DEV_REVISION
 	#define PLUGIN_VERSION FORK_SUB_REVISION..." "...FORK_MAJOR_REVISION..."."...FORK_MINOR_REVISION..."."...FORK_STABLE_REVISION
@@ -3279,7 +3279,6 @@ public void LoadCharacter(const char[] character)
 	char extensions[][] = {".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy"};
 	char config[PLATFORM_MAX_PATH];
 
-	//BuildPath(Path_SM, config, sizeof(config), "configs/freak_fortress_2/%s.cfg", character);
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s.cfg", ConfigPath, character);
 	if(!FileExists(config))
 	{
@@ -3354,10 +3353,9 @@ public void LoadCharacter(const char[] character)
 
 	char key[PLATFORM_MAX_PATH], section[64];
 	KvSetString(BossKV[Specials], "filename", character);
-	KvGetString(BossKV[Specials], "name", config, sizeof(config));
+	GetBossSpecial(Specials, config, sizeof(config));
 	bBlockVoice[Specials]=view_as<bool>(KvGetNum(BossKV[Specials], "sound_block_vo", 0));
 	BossSpeed[Specials]=KvGetFloat(BossKV[Specials], "maxspeed", 340.0);
-	//BossRageDamage[Specials]=KvGetFloat(BossKV[Specials], "ragedamage", 1900.0);
 	KvGotoFirstSubKey(BossKV[Specials]);
 
 	while(KvGotoNextKey(BossKV[Specials]))
@@ -4261,7 +4259,7 @@ public Action OnRoundStart(Handle event, const char[] name, bool dontBroadcast)
 	{
 		char newName[256], bossName[64];
 		SetConVarString(hostName, oldName);
-		KvGetString(BossKV[Special[0]], "name", bossName, sizeof(bossName));
+		GetBossSpecial(Special[0], bossName, sizeof(bossName));
 		Format(newName, sizeof(newName), "%s | %s", oldName, bossName);
 		SetConVarString(hostName, newName);
 	}
@@ -4554,12 +4552,12 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 				if(bossWin > 0)
 				{
 					AddClientStats(boss, Cookie_BossWins, 1);
-					gainedPoint[boss]=true;
+					gainedPoint[boss] = true;
 				}
 				else if(bossWin == 0)
 				{
 					AddClientStats(boss, Cookie_BossLosses, 1);
-					gainedPoint[boss]=true;
+					gainedPoint[boss] = true;
 				}
 			}
 		}
@@ -4611,17 +4609,23 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 	int boss;
 	if(isBossAlive)
 	{
-		char text[128], bossName[64], lives[8];
+		char text[MAXPLAYERS+1][128], bossName[64], lives[8];
 		for(int target; target<=MaxClients; target++)
 		{
 			if(IsBoss(target))
 			{
 				boss=Boss[target];
 				KvRewind(BossKV[Special[boss]]);
-				KvGetString(BossKV[Special[boss]], "name", bossName, sizeof(bossName), "=Failed name=");
 				BossLives[boss]>1 ? Format(lives, sizeof(lives), "x%i", BossLives[boss]) : strcopy(lives, 2, "");
-				Format(text, sizeof(text), "%s\n%t", text, "ff2_alive", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
-				FPrintToChatAll("%t", "ff2_alive", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+				for(int client; client<=MaxClients; client++)
+				{
+					if(IsValidClient(client))
+					{
+						GetBossSpecial(Special[boss], bossName, sizeof(bossName), client);
+						Format(text[client], sizeof(text[]), "%s\n%t", text, "ff2_alive", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+						FPrintToChat(client, "%t", "ff2_alive", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+					}
+				}
 			}
 		}
 
@@ -4630,7 +4634,7 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 		{
 			if(IsValidClient(client))
 			{
-				FF2_ShowHudText(client, -1, "%s", text);
+				FF2_ShowHudText(client, -1, "%s", text[client]);
 			}
 		}
 
@@ -4641,19 +4645,17 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 	}
 
 	int top[3];
-	Damage[0]=0;
+	Damage[0] = 0;
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if(!IsValidClient(client) || Damage[client]<=0 || IsBoss(client))
-		{
 			continue;
-		}
 
 		if(Damage[client]>=Damage[top[0]])
 		{
-			top[2]=top[1];
-			top[1]=top[0];
-			top[0]=client;
+			top[2] = top[1];
+			top[1] = top[0];
+			top[0] = client;
 		}
 		else if(Damage[client]>=Damage[top[1]])
 		{
@@ -4697,7 +4699,7 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 		else
 		{
 			Format(leaders[i], 32, "---");
-			top[i]=0;
+			top[i] = 0;
 		}
 	}
 
@@ -5564,13 +5566,10 @@ public Action Command_SetMyBoss(int client, int args)
 		ReplyToCommand(client, "[SM] %t", "Command is in-game only");
 		return Plugin_Handled;
 	}
-	
+
 	if(!GetConVarBool(cvarSelectBoss))
-	{
-		// No reply because, disabled msg and another plugin's menu shows?
 		return Plugin_Handled;
-	}
-	
+
 	if(!CheckCommandAccess(client, "ff2_boss", 0, true))
 	{
 		ReplyToCommand(client, "[SM] %t", "No Access");
@@ -5591,158 +5590,101 @@ public Action Command_SetMyBoss(int client, int args)
 		for(int config; config<Specials; config++)
 		{
 			KvRewind(BossKV[config]);
+			if(KvGetNum(BossKV[config], "blocked", 0))
+				continue;
+
 			KvGetString(BossKV[config], "companion", companionName, sizeof(companionName));
-			KvGetString(BossKV[config], "name", boss, sizeof(boss));
-			if(KvGetNum(BossKV[config], "blocked", 0)) continue;
-
-			if(StrEqual(boss, name, false))
+			GetBossSpecial(config, boss, sizeof(boss), client);
+			if(!StrEqual(bossName, name, false))
 			{
-				if((KvGetNum(BossKV[config], "donator", 0) && !CheckCommandAccess(client, "ff2_donator_bosses", ADMFLAG_RESERVATION, true)) ||
-				   (KvGetNum(BossKV[config], "admin", 0) && !CheckCommandAccess(client, "ff2_admin_bosses", ADMFLAG_GENERIC, true)) ||
-				   (KvGetNum(BossKV[config], "owner", 0) && !CheckCommandAccess(client, "ff2_owner_bosses", ADMFLAG_ROOT, true)))
-				{
-					if(KvGetNum(BossKV[config], "hidden", 0))
-					{
-						FReplyToCommand(client, "Boss could not be found!");
-						return Plugin_Handled;
-					}
-					else
-					{
-						FReplyToCommand(client, "%t", "deny_donator");
-						return Plugin_Handled;
-					}
-				}
-				else if(BossTheme(config) && !CheckCommandAccess(client, "ff2_theme_bosses", ADMFLAG_CONVARS, true))
-				{
-					if(KvGetNum(BossKV[config], "hidden", 0))
-					{
-						FReplyToCommand(client, "Boss could not be found!");
-						return Plugin_Handled;
-					}
-					else
-					{
-						FReplyToCommand(client, "%t", "deny_donator");
-						return Plugin_Handled;
-					}
-				}
-				else if(KvGetNum(BossKV[config], "hidden", 0) &&
-				      !(KvGetNum(BossKV[config], "donator", 0) ||
-				        BossTheme(config) ||
-					KvGetNum(BossKV[config], "admin", 0) ||
-					KvGetNum(BossKV[config], "owner", 0)))
-				{
-					FReplyToCommand(client, "Boss could not be found!");
-					return Plugin_Handled;
-				}
-				if(KvGetNum(BossKV[config], "nofirst", 0) && (RoundCount<arenaRounds || (RoundCount==arenaRounds && CheckRoundState()!=1)))
-				{
-					FReplyToCommand(client, "%t", "deny_nofirst");
-					return Plugin_Handled;
-				}
-				if(strlen(companionName) && !DuoMin)
-				{
-					FReplyToCommand(client, "%t", "deny_duo_short");
-					return Plugin_Handled;
-				}
-				if(strlen(companionName) && GetConVarBool(cvarDuoBoss) && view_as<int>(ToggleDuo[client])>1)
-				{
-					FReplyToCommand(client, "%t", "deny_duo_off");
-					return Plugin_Handled;
-				}
-				if(AreClientCookiesCached(client) && GetConVarInt(cvarKeepBoss)<0)
-				{
-					char cookie[64];
-					GetClientCookie(client, LastPlayedCookie, cookie, sizeof(cookie));
-					if(StrEqual(boss, cookie, false))
-					{
-						FReplyToCommand(client, "%t", "deny_recent");
-						return Plugin_Handled;
-					}
-				}
-				IsBossSelected[client]=true;
-				strcopy(xIncoming[client], sizeof(xIncoming[]), boss);
-				FReplyToCommand(client, "%t", "to0_boss_selected", boss);
-				return Plugin_Handled;
-			}
-
-			KvGetString(BossKV[config], "filename", boss, sizeof(boss));
-			if(StrEqual(boss, name, false))
-			{
-				if((KvGetNum(BossKV[config], "donator", 0) && !CheckCommandAccess(client, "ff2_donator_bosses", ADMFLAG_RESERVATION, true)) ||
-				   (KvGetNum(BossKV[config], "admin", 0) && !CheckCommandAccess(client, "ff2_admin_bosses", ADMFLAG_GENERIC, true)) ||
-				   (KvGetNum(BossKV[config], "owner", 0) && !CheckCommandAccess(client, "ff2_owner_bosses", ADMFLAG_ROOT, true)))
-				{
-					if(KvGetNum(BossKV[config], "hidden", 0))
-					{
-						FReplyToCommand(client, "Boss could not be found!");
-						return Plugin_Handled;
-					}
-					else
-					{
-						FReplyToCommand(client, "%t", "deny_donator");
-						return Plugin_Handled;
-					}
-				}
-				else if(BossTheme(config) && !CheckCommandAccess(client, "ff2_theme_bosses", ADMFLAG_CONVARS, true))
-				{
-					if(KvGetNum(BossKV[config], "hidden", 0))
-					{
-						FReplyToCommand(client, "Boss could not be found!");
-						return Plugin_Handled;
-					}
-					else
-					{
-						FReplyToCommand(client, "%t", "deny_donator");
-						return Plugin_Handled;
-					}
-				}
-				else if(KvGetNum(BossKV[config], "hidden", 0) &&
-				      !(KvGetNum(BossKV[config], "donator", 0) ||
-				        BossTheme(config) ||
-					KvGetNum(BossKV[config], "admin", 0) ||
-					KvGetNum(BossKV[config], "owner", 0)))
-				{
-					FReplyToCommand(client, "Boss could not be found!");
-					return Plugin_Handled;
-				}
-				if(KvGetNum(BossKV[config], "nofirst", 0) && (RoundCount<arenaRounds || (RoundCount==arenaRounds && CheckRoundState()!=1)))
-				{
-					FReplyToCommand(client, "%t", "deny_nofirst");
-					return Plugin_Handled;
-				}
-				if(strlen(companionName) && !DuoMin)
-				{
-					FReplyToCommand(client, "%t", "deny_duo_short");
-					return Plugin_Handled;
-				}
-				if(strlen(companionName) && GetConVarBool(cvarDuoBoss) && view_as<int>(ToggleDuo[client])>1)
-				{
-					FReplyToCommand(client, "%t", "deny_duo_off");
-					return Plugin_Handled;
-				}
 				KvGetString(BossKV[config], "name", boss, sizeof(boss));
-				if(AreClientCookiesCached(client) && GetConVarInt(cvarKeepBoss)<0 && !CheckCommandAccess(client, "ff2_replay_bosses", ADMFLAG_CHEATS, true))
+				if(!StrEqual(boss, name, false))
 				{
-					char cookie[64];
-					GetClientCookie(client, LastPlayedCookie, cookie, sizeof(cookie));
-					if(StrEqual(boss, cookie, false))
+					KvGetString(BossKV[config], "filename", boss, sizeof(boss));
+					if(!StrEqual(boss, name, false))
 					{
-						FReplyToCommand(client, "%t", "deny_recent");
+						FReplyToCommand(client, "%t", "deny_unknown");
 						return Plugin_Handled;
 					}
 				}
-				IsBossSelected[client]=true;
-				strcopy(xIncoming[client], sizeof(xIncoming[]), boss);
-				SaveKeepBossCookie(client);
-				FReplyToCommand(client, "%t", "to0_boss_selected", boss);
+				GetBossSpecial(config, boss, sizeof(boss), client);
+			}
+
+			if((KvGetNum(BossKV[config], "donator", 0) && !CheckCommandAccess(client, "ff2_donator_bosses", ADMFLAG_RESERVATION, true)) ||
+			   (KvGetNum(BossKV[config], "admin", 0) && !CheckCommandAccess(client, "ff2_admin_bosses", ADMFLAG_GENERIC, true)) ||
+			   (KvGetNum(BossKV[config], "owner", 0) && !CheckCommandAccess(client, "ff2_owner_bosses", ADMFLAG_ROOT, true)))
+			{
+				if(KvGetNum(BossKV[config], "hidden", 0))
+				{
+					FReplyToCommand(client, "%t", "deny_unknown");
+					return Plugin_Handled;
+				}
+				else
+				{
+					FReplyToCommand(client, "%t", "deny_donator");
+					return Plugin_Handled;
+				}
+			}
+			else if(BossTheme(config) && !CheckCommandAccess(client, "ff2_theme_bosses", ADMFLAG_CONVARS, true))
+			{
+				if(KvGetNum(BossKV[config], "hidden", 0))
+				{
+					FReplyToCommand(client, "%t", "deny_unknown");
+					return Plugin_Handled;
+				}
+				else
+				{
+					FReplyToCommand(client, "%t", "deny_donator");
+					return Plugin_Handled;
+				}
+			}
+			else if(KvGetNum(BossKV[config], "hidden", 0) &&
+			      !(KvGetNum(BossKV[config], "donator", 0) ||
+			        BossTheme(config) ||
+				KvGetNum(BossKV[config], "admin", 0) ||
+				KvGetNum(BossKV[config], "owner", 0)))
+			{
+				FReplyToCommand(client, "%t", "deny_unknown");
 				return Plugin_Handled;
 			}
+
+			if(KvGetNum(BossKV[config], "nofirst", 0) && (RoundCount<arenaRounds || (RoundCount==arenaRounds && CheckRoundState()!=1)))
+			{
+				FReplyToCommand(client, "%t", "deny_nofirst");
+				return Plugin_Handled;
+			}
+
+			if(strlen(companionName) && !DuoMin)
+			{
+				FReplyToCommand(client, "%t", "deny_duo_short");
+				return Plugin_Handled;
+			}
+
+			if(strlen(companionName) && GetConVarBool(cvarDuoBoss) && view_as<int>(ToggleDuo[client])>1)
+			{
+				FReplyToCommand(client, "%t", "deny_duo_off");
+				return Plugin_Handled;
+			}
+
+			if(AreClientCookiesCached(client) && GetConVarInt(cvarKeepBoss)<0)
+			{
+				char cookie1[64], cookie2[64];
+				KvGetString(BossKV[config], "name", cookie1, sizeof(cookie1));
+				GetClientCookie(client, LastPlayedCookie, cookie2, sizeof(cookie2));
+				if(StrEqual(cookie1, cookie2, false))
+				{
+					FReplyToCommand(client, "%t", "deny_recent");
+					return Plugin_Handled;
+				}
+			}
+			IsBossSelected[client] = true;
+			strcopy(xIncoming[client], sizeof(xIncoming[]), boss);
+			FReplyToCommand(client, "%t", "to0_boss_selected", boss);
+			return Plugin_Handled;
 		}
-		FReplyToCommand(client, "Boss could not be found!");
-		return Plugin_Handled;
 	}
 
-	char boss[64];
+	char boss[64], bossName[64];
 	Handle dMenu = CreateMenu(Command_SetMyBossH);
 
 	SetGlobalTransTarget(client);
@@ -5769,8 +5711,7 @@ public Action Command_SetMyBoss(int client, int args)
 		{
 			Format(boss, sizeof(boss), "%t", "to0_enablepts");
 		}
-
-		AddMenuItem(dMenu, "_bosstoggle", boss);
+		AddMenuItem(dMenu, boss, boss);
 	}
 	if(GetConVarBool(cvarDuoBoss))
 	{
@@ -5782,8 +5723,7 @@ public Action Command_SetMyBoss(int client, int args)
 		{
 			Format(boss, sizeof(boss), "%t", "to0_enableduo");
 		}
-
-		AddMenuItem(dMenu, "_duotoggle", boss);
+		AddMenuItem(dMenu, boss, boss);
 	}
 	#if defined _freak_fortress_2_kstreak_included
 	if(kmerge && CheckCommandAccess(client, "ff2_kstreak_a", 0, true))
@@ -5800,21 +5740,19 @@ public Action Command_SetMyBoss(int client, int args)
 		{
 			Format(boss, sizeof(boss), "%t", "to0_togglekstreak");
 		}
-
-		AddMenuItem(dMenu, "_kstreak", boss);
+		AddMenuItem(dMenu, boss, boss);
 	}
 	#endif
 	if(GetConVarBool(cvarSkipBoss))
 	{
+		Format(boss, sizeof(boss), "%t", "to0_resetpts");
 		if(QueuePoints[client]<10 || !Enabled2)
 		{
-			Format(boss, sizeof(boss), "%t", "to0_resetpts");
-			AddMenuItem(dMenu, "_skipboss", boss, ITEMDRAW_DISABLED);
+			AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
 		}
 		else
 		{
-			Format(boss, sizeof(boss), "%t", "to0_resetpts");
-			AddMenuItem(dMenu, "_skipboss", boss);
+			AddMenuItem(dMenu, boss, boss);
 		}
 	}
 
@@ -5822,61 +5760,52 @@ public Action Command_SetMyBoss(int client, int args)
 	{
 		char companionName[64];
 		KvRewind(BossKV[config]);
-		KvGetString(BossKV[config], "companion", companionName, sizeof(companionName));
-		if(KvGetNum(BossKV[config], "blocked", 0)) continue;
+		if(KvGetNum(BossKV[config], "blocked", 0))
+			continue;
 
 		KvGetString(BossKV[config], "name", boss, sizeof(boss));
+		KvGetString(BossKV[config], "companion", companionName, sizeof(companionName));
+		GetBossSpecial(config, bossName, sizeof(bossName), client);
 		if((KvGetNum(BossKV[config], "donator", 0) && !CheckCommandAccess(client, "ff2_donator_bosses", ADMFLAG_RESERVATION, true)) ||
 		   (KvGetNum(BossKV[config], "admin", 0) && !CheckCommandAccess(client, "ff2_admin_bosses", ADMFLAG_GENERIC, true)) ||
 		   (KvGetNum(BossKV[config], "owner", 0) && !CheckCommandAccess(client, "ff2_owner_bosses", ADMFLAG_ROOT, true)))
 		{
 			if(!KvGetNum(BossKV[config], "hidden", 0))
-				AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
+				AddMenuItem(dMenu, boss, bossName, ITEMDRAW_DISABLED);
 		}
 		else if(BossTheme(config) && !CheckCommandAccess(client, "ff2_theme_bosses", ADMFLAG_CONVARS, true))
 		{
 			if(!KvGetNum(BossKV[config], "hidden", 0))
-				AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
+				AddMenuItem(dMenu, boss, bossName, ITEMDRAW_DISABLED);
 		}
-		else if(KvGetNum(BossKV[config], "hidden", 0) &&
-		      !(KvGetNum(BossKV[config], "donator", 0) ||
-		        BossTheme(config) ||
-			KvGetNum(BossKV[config], "admin", 0) ||
-			KvGetNum(BossKV[config], "owner", 0)))
+		else if(KvGetNum(BossKV[config], "hidden", 0))
 		{
 			// Don't show
 		}
 		else if(KvGetNum(BossKV[config], "nofirst", 0) && (RoundCount<arenaRounds || (RoundCount==arenaRounds && CheckRoundState()!=1)))
 		{
-			AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
+			AddMenuItem(dMenu, boss, bossName, ITEMDRAW_DISABLED);
 		}
 		else if(strlen(companionName) && ((GetConVarBool(cvarDuoBoss) && view_as<int>(ToggleDuo[client])>1) || !DuoMin))
 		{
-			AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
+			AddMenuItem(dMenu, boss, bossName, ITEMDRAW_DISABLED);
 		}
 		else
 		{
 			if(AreClientCookiesCached(client) && GetConVarInt(cvarKeepBoss)<0 && !CheckCommandAccess(client, "ff2_replay_bosses", ADMFLAG_CHEATS, true))
 			{
-				char cookie[64];
-				KvGetString(BossKV[config], "name", boss, sizeof(boss));
-				GetClientCookie(client, LastPlayedCookie, cookie, sizeof(cookie));
-				if(StrEqual(boss, cookie, false))
+				char cookie1[64], cookie2[64];
+				KvGetString(BossKV[config], "name", cookie1, sizeof(cookie1));
+				GetClientCookie(client, LastPlayedCookie, cookie2, sizeof(cookie2));
+				if(StrEqual(cookie1, cookie2, false))
 				{
-					AddMenuItem(dMenu, boss, boss, ITEMDRAW_DISABLED);
-				}
-				else
-				{
-					AddMenuItem(dMenu, boss, boss);
+					AddMenuItem(dMenu, boss, bossName, ITEMDRAW_DISABLED);
+					continue;
 				}
 			}
-			else
-			{
-				AddMenuItem(dMenu, boss, boss);
-			}
+			AddMenuItem(dMenu, boss, bossName);
 		}
 	}
-
 	SetMenuExitButton(dMenu, true);
 	DisplayMenu(dMenu, client, 20);
 	return Plugin_Handled;
@@ -5959,10 +5888,11 @@ public int Command_SetMyBossH(Handle menu, MenuAction action, int param1, int pa
 
 			if(!GetConVarBool(cvarBossDesc) || !ToggleInfo[param1])
 			{
+				char bossName[64];
 				IsBossSelected[param1] = true;
-				GetMenuItem(menu, param2, xIncoming[param1], sizeof(xIncoming[]));
+				GetMenuItem(menu, param2, xIncoming[param1], sizeof(xIncoming[]), 0, bossName, sizeof(bossName));
 				SaveKeepBossCookie(param1);
-				FReplyToCommand(param1, "%t", "to0_boss_selected", xIncoming[param1]);
+				FReplyToCommand(param1, "%t", "to0_boss_selected", bossName);
 			}
 			else
 			{
@@ -5985,8 +5915,7 @@ public Action ConfirmBoss(int client)
 		
 	for(int config; config<Specials; config++)
 	{
-		KvRewind(BossKV[config]);
-		KvGetString(BossKV[config], "name", boss, sizeof(boss));
+		GetBossSpecial(config, boss, sizeof(boss));
 		if(StrEqual(boss, cIncoming[client], false))
 		{
 			KvRewind(BossKV[config]);
@@ -5995,19 +5924,18 @@ public Action ConfirmBoss(int client)
 			{
 				KvGetString(BossKV[config], "description_en", text, sizeof(text));  //Default to English if their language isn't available
 				if(!text[0])
-				{
 					Format(text, sizeof(text), "%t", "to0_nodesc");
-				}
 			}
 			ReplaceString(text, sizeof(text), "\\n", "\n");
 		}
 	}
+	GetBossSpecial(config, boss, sizeof(boss), client);
 
 	Handle dMenu = CreateMenu(ConfirmBossH);
 	SetMenuTitle(dMenu, text);
 
-	Format(text, sizeof(text), "%t", "to0_confirm", cIncoming[client]);
-	AddMenuItem(dMenu, text, text);
+	Format(text, sizeof(text), "%t", "to0_confirm", boss);
+	AddMenuItem(dMenu, boss, text);
 
 	Format(text, sizeof(text), "%t", "to0_cancel");
 	AddMenuItem(dMenu, text, text);
@@ -6031,10 +5959,12 @@ public int ConfirmBossH(Handle menu, MenuAction action, int param1, int param2)
 			{
 				case 0: 
 				{
+					char bossName[64];
 					IsBossSelected[param1] = true;
+					GetMenuItem(menu, param2, bossName, sizeof(bossName));
 					strcopy(xIncoming[param1], sizeof(xIncoming[]), cIncoming[param1]);
 					SaveKeepBossCookie(param1);
-					FReplyToCommand(param1, "%t", "to0_boss_selected", xIncoming[param1]);
+					FReplyToCommand(param1, "%t", "to0_boss_selected", bossName);
 				}
 				default:
 				{
@@ -6151,11 +6081,11 @@ bool CheckValidBoss(int client=0, char[] SpecialName, bool CompanionCheck=false)
 	for(int config; config<Specials; config++)
 	{
 		KvRewind(BossKV[config]);
-		KvGetString(BossKV[config], "companion", companionName, sizeof(companionName));
-		KvGetString(BossKV[config], "name", boss, sizeof(boss));
 		if(KvGetNum(BossKV[config], "blocked", 0))
 			continue;
 
+		KvGetString(BossKV[config], "companion", companionName, sizeof(companionName));
+		KvGetString(BossKV[config], "name", boss, sizeof(boss));
 		if(StrEqual(boss, SpecialName, false))
 		{
 			if(strlen(companionName) && CompanionCheck)
@@ -6316,27 +6246,34 @@ public Action MessageTimer(Handle timer)
 	}
 
 	SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
-	char text[512], textChat[512], lives[8], name[64];
+	char text[MAXPLAYERS+1][512], textChat[512], lives[8], name[64];
 	for(int client; client<=MaxClients; client++)
 	{
 		if(IsBoss(client))
 		{
-			int boss=Boss[client];
+			int boss = Boss[client];
 			KvRewind(BossKV[Special[boss]]);
 			KvGetString(BossKV[Special[boss]], "name", name, sizeof(name), "=Failed name=");
-			if(BossLives[boss]>1)
+			if(BossLives[boss] > 1)
 			{
 				Format(lives, sizeof(lives), "x%i", BossLives[boss]);
 			}
 			else
 			{
-				lives[0]='\0';
+				lives[0] = '\0';
 			}
 
-			Format(text, sizeof(text), "%s\n%t", text, "ff2_start", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
-			Format(textChat, sizeof(textChat), "%t!", "ff2_start", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
-			ReplaceString(textChat, sizeof(textChat), "\n", "");  //Get rid of newlines
-			FPrintToChatAll("%s", textChat);
+			for(int clients; clients<=MaxClients; clients++)
+			{
+				if(IsValidClient(clients))
+				{
+					GetBossSpecial(Special[boss], name, sizeof(name));
+					Format(text[clients], sizeof(text[]), "%s\n%t", text, "ff2_start", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
+					Format(textChat, sizeof(textChat), "%t", "ff2_start", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
+					ReplaceString(textChat, sizeof(textChat), "\n", "");  //Get rid of newlines
+					FPrintToChat(clients, "%s", textChat);
+				}
+			}
 		}
 	}
 
@@ -12743,6 +12680,39 @@ public Action OnGetMaxHealth(int client, int &maxHealth)
 	return Plugin_Continue;
 }
 
+stock bool GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int client=0);
+{
+	if(boss < 0)
+		return false;
+
+	if(!BossKV[boss])
+		return false;
+
+	char name[64], language[20];
+	GetLanguageInfo(IsValidClient(client) ? GetClientLanguage(client) : GetServerLanguage(), language, 8, name, 8);
+	Format(language, sizeof(language), "name_%s", language);
+
+	KvRewind(BossKV[boss]);
+	KvGetString(BossKV[boss], language, name, bufferlength);
+	if(!name[0])
+	{
+		if(!IsValidClient)
+		{
+			GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
+			Format(language, sizeof(language), "name_%s", language);
+			KvGetString(BossKV[boss], language, name, bufferlength);
+		}
+		if(!name[0])
+		{
+			KvGetString(BossKV[special], "name", name, bufferlength);
+			if(!name[0])
+				return false;
+		}
+	}
+	strcopy(buffer, bufferlength, name);
+	return true;
+}
+
 stock int GetClientCloakIndex(int client)
 {
 	if(!IsValidClient(client, false))
@@ -15303,25 +15273,56 @@ public int Native_GetTeam(Handle plugin, int numParams)
 
 public int Native_GetSpecial(Handle plugin, int numParams)
 {
-	int index=GetNativeCell(1), dstrlen=GetNativeCell(3), see=GetNativeCell(4);
+	int index=GetNativeCell(1), dstrlen=GetNativeCell(3), see=GetNativeCell(4), client=GetNativeCell(5);
 	char[] s = new char[dstrlen];
+
 	if(see)
 	{
-		if(index<0) return false;
-		if(!BossKV[index]) return false;
+		if(index<0)
+			return false;
+
+		if(!BossKV[index])
+			return false;
+
 		KvRewind(BossKV[index]);
-		KvGetString(BossKV[index], "name", s, dstrlen);
-		SetNativeString(2, s,dstrlen);
 	}
 	else
 	{
-		if(index<0) return false;
-		if(Special[index]<0) return false;
-		if(!BossKV[Special[index]]) return false;
+		if(index<0)
+			return false;
+
+		if(Special[index]<0)
+			return false;
+
+		if(!BossKV[Special[index]])
+			return false;
+
 		KvRewind(BossKV[Special[index]]);
-		KvGetString(BossKV[Special[index]], "name", s, dstrlen);
-		SetNativeString(2, s,dstrlen);
 	}
+
+	char language[20];
+	GetLanguageInfo(client ? GetClientLanguage(client) : GetServerLanguage(), language, 8, s, 8);
+	Format(language, sizeof(language), "name_%s", language);
+
+	KvRewind(BossKV[boss]);
+	KvGetString(BossKV[boss], language, s, dstrlen);
+	if(!name[0])
+	{
+		if(client)
+		{
+			GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
+			Format(language, sizeof(language), "name_%s", language);
+			KvGetString(BossKV[boss], language, s, dstrlen);
+		}
+		if(!name[0])
+		{
+			KvGetString(BossKV[special], "name", s, dstrlen);
+			if(!name[0])
+				return false;
+		}
+	}
+
+	SetNativeString(2, s, dstrlen);
 	return true;
 }
 
