@@ -3353,7 +3353,7 @@ public void LoadCharacter(const char[] character)
 
 	char key[PLATFORM_MAX_PATH], section[64];
 	KvSetString(BossKV[Specials], "filename", character);
-	GetBossSpecial(Specials, config, sizeof(config));
+	KvSetString(BossKV[Specials], "name", config, sizeo(config));
 	bBlockVoice[Specials]=view_as<bool>(KvGetNum(BossKV[Specials], "sound_block_vo", 0));
 	BossSpeed[Specials]=KvGetFloat(BossKV[Specials], "maxspeed", 340.0);
 	KvGotoFirstSubKey(BossKV[Specials]);
@@ -4615,14 +4615,14 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 			if(IsBoss(target))
 			{
 				boss=Boss[target];
-				KvRewind(BossKV[Special[boss]]);
+				strcopy(name, sizeof(name), "=Failed name=");
 				BossLives[boss]>1 ? Format(lives, sizeof(lives), "x%i", BossLives[boss]) : strcopy(lives, 2, "");
 				for(int client; client<=MaxClients; client++)
 				{
 					if(IsValidClient(client))
 					{
 						GetBossSpecial(Special[boss], bossName, sizeof(bossName), client);
-						Format(text[client], sizeof(text[]), "%s\n%t", text, "ff2_alive", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+						Format(text[client], sizeof(text[]), "%s\n%t", text[client], "ff2_alive", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
 						FPrintToChat(client, "%t", "ff2_alive", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
 					}
 				}
@@ -5595,7 +5595,7 @@ public Action Command_SetMyBoss(int client, int args)
 
 			KvGetString(BossKV[config], "companion", companionName, sizeof(companionName));
 			GetBossSpecial(config, boss, sizeof(boss), client);
-			if(!StrEqual(bossName, name, false))
+			if(!StrEqual(boss, name, false))
 			{
 				KvGetString(BossKV[config], "name", boss, sizeof(boss));
 				if(!StrEqual(boss, name, false))
@@ -5890,7 +5890,7 @@ public int Command_SetMyBossH(Handle menu, MenuAction action, int param1, int pa
 			{
 				char bossName[64];
 				IsBossSelected[param1] = true;
-				GetMenuItem(menu, param2, xIncoming[param1], sizeof(xIncoming[]), 0, bossName, sizeof(bossName));
+				GetMenuItem(menu, param2, xIncoming[param1], sizeof(xIncoming[]), _, bossName, sizeof(bossName));
 				SaveKeepBossCookie(param1);
 				FReplyToCommand(param1, "%t", "to0_boss_selected", bossName);
 			}
@@ -5915,7 +5915,8 @@ public Action ConfirmBoss(int client)
 		
 	for(int config; config<Specials; config++)
 	{
-		GetBossSpecial(config, boss, sizeof(boss));
+		KvRewind(BossKV[config]);
+		KvGetString(BossKV[config], "name", boss, sizeof(boss));
 		if(StrEqual(boss, cIncoming[client], false))
 		{
 			KvRewind(BossKV[config]);
@@ -6252,8 +6253,7 @@ public Action MessageTimer(Handle timer)
 		if(IsBoss(client))
 		{
 			int boss = Boss[client];
-			KvRewind(BossKV[Special[boss]]);
-			KvGetString(BossKV[Special[boss]], "name", name, sizeof(name), "=Failed name=");
+			strcopy(name, sizeof(name), "=Failed name=");
 			if(BossLives[boss] > 1)
 			{
 				Format(lives, sizeof(lives), "x%i", BossLives[boss]);
@@ -6268,7 +6268,7 @@ public Action MessageTimer(Handle timer)
 				if(IsValidClient(clients))
 				{
 					GetBossSpecial(Special[boss], name, sizeof(name));
-					Format(text[clients], sizeof(text[]), "%s\n%t", text, "ff2_start", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
+					Format(text[clients], sizeof(text[]), "%s\n%t", text[clients], "ff2_start", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
 					Format(textChat, sizeof(textChat), "%t", "ff2_start", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
 					ReplaceString(textChat, sizeof(textChat), "\n", "");  //Get rid of newlines
 					FPrintToChat(clients, "%s", textChat);
@@ -6285,16 +6285,16 @@ public Action MessageTimer(Handle timer)
 			{
 				if(strlen(BossIcon))
 				{
-					ShowGameText(client, BossIcon, _, text);
+					ShowGameText(client, BossIcon, _, text[client]);
 				}
 				else
 				{
-					ShowGameText(client, "leaderboard_streak", _, text);
+					ShowGameText(client, "leaderboard_streak", _, text[client]);
 				}
 			}
 			else
 			{
-				FF2_ShowSyncHudText(client, infoHUD, text);
+				FF2_ShowSyncHudText(client, infoHUD, text[client]);
 			}
 		}
 	}
@@ -6587,7 +6587,7 @@ public Action Timer_MakeBoss(Handle timer, any boss)
 	if(BossLivesMax[boss] <= 0)
 	{
 		char bossName[64];
-		KvGetString(BossKV[Special[boss]], "name", bossName, sizeof(bossName));
+		KvGetString(BossKV[Special[boss]], "filename", bossName, sizeof(bossName));
 		PrintToServer("[FF2 Bosses] Warning: Boss %s has an invalid amount of lives, setting to 1", bossName);
 		BossLivesMax[boss] = 1;
 	}
@@ -8144,14 +8144,13 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 {
 	if(IsBoss(client) || GetGameTime()>=HPTime)
 	{
-		char text[512], lives[8], name[64];
+		char text[MAXPLAYERS+1][512], lives[8], name[64];
 		for(int target; target<=MaxClients; target++)
 		{
 			if(IsBoss(target))
 			{
 				int boss = Boss[target];
-				KvRewind(BossKV[Special[boss]]);
-				KvGetString(BossKV[Special[boss]], "name", name, sizeof(name), "=Failed name=");
+				strcopy(name, sizeof(name), "=Failed name=");
 				if(BossLives[boss] > 1)
 				{
 					Format(lives, sizeof(lives), "x%i", BossLives[boss]);
@@ -8160,8 +8159,16 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 				{
 					lives[0] = '\0';
 				}
-				Format(text, sizeof(text), "%s\n%t", text, "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
-				FPrintToChatAll("%t", "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+
+				for(int client; client<=MaxClients; client++)
+				{
+					if(IsValidClient(client))
+					{
+						GetBossSpecial(Special[boss], name, sizeof(name), client);
+						Format(text[client], sizeof(text[]), "%s\n%t", text[client], "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+						FPrintToChat(client, "%t", "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+					}
+				}
 				BossHealthLast[boss] = BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1);
 			}
 		}
@@ -8174,16 +8181,16 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 				{
 					if(strlen(BossIcon))
 					{
-						ShowGameText(target, BossIcon, _, text);
+						ShowGameText(target, BossIcon, _, text[client]);
 					}
 					else
 					{
-						ShowGameText(target, "leaderboard_streak", _, text);
+						ShowGameText(target, "leaderboard_streak", _, text[client]);
 					}
 				}
 				else
 				{
-					PrintCenterText(target, text);
+					PrintCenterText(target, text[client]);
 				}
 			}
 		}
@@ -8213,7 +8220,7 @@ public Action Command_SetNextBoss(int client, int args)
 {
 	char name[64], boss[64];
 
-	if(args<1)
+	if(args < 1)
 	{
 		if(!IsValidClient(client))
 		{
@@ -8221,8 +8228,10 @@ public Action Command_SetNextBoss(int client, int args)
 			return Plugin_Handled;
 		}
 
+		GetBossSpecial(Special[Incoming[0]], name, sizeof(name), client);
+
 		Handle dMenu = CreateMenu(Command_SetNextBossH);
-		SetMenuTitle(dMenu, "Override Next Boss\n  Current Selection: %s", Incoming[0]);
+		SetMenuTitle(dMenu, "Override Next Boss\n  Current Selection: %s", name);
 
 		Format(boss, sizeof(boss), "No Override");
 		AddMenuItem(dMenu, boss, boss);
@@ -8231,7 +8240,8 @@ public Action Command_SetNextBoss(int client, int args)
 		{
 			KvRewind(BossKV[config]);
 			KvGetString(BossKV[config], "name", boss, sizeof(boss));
-			AddMenuItem(dMenu, boss, boss);
+			GetBossSpecial(Special[config], name, sizeof(name), client);
+			AddMenuItem(dMenu, boss, name);
 		}
 
 		SetMenuExitButton(dMenu, true);
@@ -8242,11 +8252,20 @@ public Action Command_SetNextBoss(int client, int args)
 
 	for(int config; config<Specials; config++)
 	{
+		GetBossSpecial(Special[config], boss, sizeof(boss), client);
+		if(StrContains(boss, name, false) != -1)
+		{
+			Incoming[0] = config;
+			FReplyToCommand(client, "Set the next boss to %s", boss);
+			return Plugin_Handled;
+		}
+
 		KvRewind(BossKV[config]);
 		KvGetString(BossKV[config], "name", boss, sizeof(boss));
 		if(StrContains(boss, name, false) != -1)
 		{
 			Incoming[0] = config;
+			GetBossSpecial(Special[config], boss, sizeof(boss), client);
 			FReplyToCommand(client, "Set the next boss to %s", boss);
 			return Plugin_Handled;
 		}
@@ -8255,7 +8274,7 @@ public Action Command_SetNextBoss(int client, int args)
 		if(StrContains(boss, name, false) != -1)
 		{
 			Incoming[0] = config;
-			KvGetString(BossKV[config], "name", boss, sizeof(boss));
+			GetBossSpecial(Special[config], boss, sizeof(boss), client);
 			FReplyToCommand(client, "Set the next boss to %s", boss);
 			return Plugin_Handled;
 		}
@@ -8283,11 +8302,10 @@ public int Command_SetNextBossH(Handle menu, MenuAction action, int client, int 
 				}
 				default:
 				{
-					int choice2 = choice - 1;
+					int choice2 = choice-1;
 					Incoming[0] = choice2;
 					char boss[64];
-					KvRewind(BossKV[choice2]);
-					KvGetString(BossKV[choice2], "name", boss, sizeof(boss));
+					GetBossSpecial(choice2, boss, sizeof(boss), client);
 					FReplyToCommand(client, "Set the next boss to %s", boss);
 				}
 			}
@@ -8796,7 +8814,11 @@ stock void SetArenaCapEnableTime(float time)
 	}
 }
 
+#if SOURCEMOD_V_MAJOR==1 && SOURCEMOD_V_MINOR<=7
+public int OnRebuildAdminCache(AdminCachePart part)
+#else
 public void OnRebuildAdminCache(AdminCachePart part)
+#endif
 {
 	if(part == AdminCache_Overrides)
 	{
@@ -9663,7 +9685,7 @@ public Action BossTimer(Handle timer)
 				}
 				else
 				{
-					int count=ExplodeString(ability, " ", lives, MAXRANDOMS, 3);
+					int count = ExplodeString(ability, " ", lives, MAXRANDOMS, 3);
 					for(int n; n<count; n++)
 					{
 						if(StringToInt(lives[n]) == BossLives[boss])
@@ -9697,14 +9719,13 @@ public Action BossTimer(Handle timer)
 
 		if(RedAlivePlayers==1 && !executed2 && GetConVarInt(cvarHealthHud)<2)
 		{
-			char message[512], name[64];
-			for(int target; target<=MaxClients; target++)  //TODO: Why is this for loop needed when we're already in a boss for loop
+			char message[MAXPLAYERS+1][512], name[64];
+			for(int target; target<=MaxClients; target++)
 			{
 				if(IsBoss(target))
 				{
 					int boss2 = GetBossIndex(target);
-					KvRewind(BossKV[Special[boss2]]);
-					KvGetString(BossKV[Special[boss2]], "name", name, sizeof(name), "=Failed name=");
+					strcopy(name, sizeof(name), "=Failed name=");
 					char bossLives[10];
 					if(BossLives[boss2] > 1)
 					{
@@ -9714,7 +9735,14 @@ public Action BossTimer(Handle timer)
 					{
 						Format(bossLives, sizeof(bossLives), "");
 					}
-					Format(message, sizeof(message), "%s\n%t", message, "ff2_hp", name, BossHealth[boss2]-BossHealthMax[boss2]*(BossLives[boss2]-1), BossHealthMax[boss2], bossLives);
+					for(int clients; clients<=MaxClients; clients++)
+					{
+						if(IsValidClient(clients))
+						{
+							GetBossSpecial(Special[boss2], name, sizeof(name), client);
+							Format(message[clients], sizeof(message[]), "%s\n%t", message[client], "ff2_hp", name, BossHealth[boss2]-BossHealthMax[boss2]*(BossLives[boss2]-1), BossHealthMax[boss2], bossLives);
+						}
+					}
 				}
 			}
 
@@ -9726,16 +9754,16 @@ public Action BossTimer(Handle timer)
 					{
 						if(strlen(BossIcon))
 						{
-							ShowGameText(target, BossIcon, _, message);
+							ShowGameText(target, BossIcon, _, message[target]);
 						}
 						else
 						{
-							ShowGameText(target, "leaderboard_streak", _, message);
+							ShowGameText(target, "leaderboard_streak", _, message[target]);
 						}
 					}
 					else
 					{
-						PrintCenterText(target, message);
+						PrintCenterText(target, message[target]);
 					}
 				}
 			}
@@ -10607,7 +10635,7 @@ public Action Timer_DrawGame(Handle timer)
 
 	SetHudTextParams(-1.0, 0.17, 1.1, 255, 255, 255, 255);
 
-	char message[512], name[64];
+	char message[MAXPLAYERS+1][512], name[64];
 	if(!Companions && GetConVarInt(cvarGameText)>0 && RedAlivePlayers==1 && GetConVarInt(cvarHealthHud)<2)
 	{
 		for(int client; client<=MaxClients; client++)
@@ -10615,8 +10643,7 @@ public Action Timer_DrawGame(Handle timer)
 			if(IsBoss(client))
 			{
 				int boss2 = GetBossIndex(client);
-				KvRewind(BossKV[Special[boss2]]);
-				KvGetString(BossKV[Special[boss2]], "name", name, sizeof(name), "=Failed name=");
+				strcopy(name, sizeof(name), "=Failed name=");
 				char bossLives[10];
 				if(BossLives[boss2] > 1)
 				{
@@ -10626,7 +10653,15 @@ public Action Timer_DrawGame(Handle timer)
 				{
 					Format(bossLives, sizeof(bossLives), "");
 				}
-				Format(message, sizeof(message), "%s\n%t", message, "ff2_hp", name, BossHealth[boss2]-BossHealthMax[boss2]*(BossLives[boss2]-1), BossHealthMax[boss2], bossLives);
+
+				for(int clients; clients<=MaxClients; clients++)
+				{
+					if(IsValidClient(client))
+					{
+						GetBossSpecial(Special[boss2], name, sizeof(name), client);
+						Format(message[clients], sizeof(message[]), "%s\n%t", message[clients], "ff2_hp", name, BossHealth[boss2]-BossHealthMax[boss2]*(BossLives[boss2]-1), BossHealthMax[boss2], bossLives);
+					}
+				}
 			}
 		}
 	}
@@ -10638,27 +10673,27 @@ public Action Timer_DrawGame(Handle timer)
 			{
 				if(timeleft<=countdownTime && timeleft>=countdownTime/2)
 				{
-					ShowGameText(client, "ico_notify_sixty_seconds", _, "%s | %s", message, timeDisplay);
+					ShowGameText(client, "ico_notify_sixty_seconds", _, "%s | %s", message[client], timeDisplay);
 				}
 				else if(timeleft<countdownTime/2 && timeleft>=countdownTime/6)
 				{
-					ShowGameText(client, "ico_notify_thirty_seconds", _, "%s | %s", message, timeDisplay);
+					ShowGameText(client, "ico_notify_thirty_seconds", _, "%s | %s", message[client], timeDisplay);
 				}
 				else if(timeleft<countdownTime/6 && timeleft>0)
 				{
-					ShowGameText(client, "ico_notify_ten_seconds", _, "%s | %s", message, timeDisplay);
+					ShowGameText(client, "ico_notify_ten_seconds", _, "%s | %s", message[client], timeDisplay);
 				}
 				else if(isCapping)
 				{
-					ShowGameText(client, "ico_notify_flag_moving_alt", _, "%s | %t", message, "Overtime");
+					ShowGameText(client, "ico_notify_flag_moving_alt", _, "%s | %t", message[client], "Overtime");
 				}
 				else if(strlen(BossIcon))
 				{
-					ShowGameText(client, BossIcon, _, "%s | %s", message, timeDisplay);
+					ShowGameText(client, BossIcon, _, "%s | %s", message[client], timeDisplay);
 				}
 				else
 				{
-					ShowGameText(client, "leaderboard_streak", _, "%s | %s", message, timeDisplay);
+					ShowGameText(client, "leaderboard_streak", _, "%s | %s", message[client], timeDisplay);
 				}
 			}
 			else if(!Companions && GetConVarInt(cvarGameText)>1)
@@ -10846,8 +10881,7 @@ public Action OnPlayerHurt(Handle event, const char[] name, bool dontBroadcast)
 			BossLives[boss] = lives;
 
 			char bossName[64];
-			KvRewind(BossKV[Special[boss]]);
-			KvGetString(BossKV[Special[boss]], "name", bossName, sizeof(bossName), "=Failed name=");
+			strcopy(bossName, sizeof(bossName), "=Failed name=");
 
 			strcopy(ability, sizeof(ability), BossLives[boss]==1 ? "ff2_life_left" : "ff2_lives_left");
 			for(int target=1; target<=MaxClients; target++)
@@ -10856,10 +10890,12 @@ public Action OnPlayerHurt(Handle event, const char[] name, bool dontBroadcast)
 				{
 					if(!Companions && GetConVarInt(cvarGameText)>0)
 					{
+						GetBossSpecial(Special[boss], bossName, sizeof(bossName), target);
 						ShowGameText(target, "ico_notify_flag_moving_alt", _, "%t", ability, bossName, BossLives[boss]);
 					}
 					else
 					{
+						GetBossSpecial(Special[boss], bossName, sizeof(bossName), target);
 						PrintCenterText(target, "%t", ability, bossName, BossLives[boss]);
 					}
 				}
@@ -11292,7 +11328,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 						if(TellName)
 						{
 							char spcl[768];
-							KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
+							GetBossSpecial(Special[boss], spcl, sizeof(spcl), attacker);
 							switch(Annotations)
 							{
 								case 1:
@@ -11363,7 +11399,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 							if(TellName)
 							{
 								char spcl[768];
-								KvGetString(BossKV[Special[GetBossIndex(attacker)]], "name", spcl, sizeof(spcl), "=Failed name=");
+								GetBossSpecial(Special[GetBossIndex(attacker)], spcl, sizeof(spcl), attacker);
 								switch(Annotations)
 								{
 									case 1:
@@ -11472,8 +11508,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 						if(TellName)
 						{
 							char spcl[768];
-							KvRewind(BossKV[Special[boss]]);
-							KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
+							GetBossSpecial(Special[boss], spcl, sizeof(spcl), attacker);
 							switch(Annotations)
 							{
 								case 1:
@@ -11506,10 +11541,8 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 					{
 						if(TellName)
 						{
-							int boss2 = GetBossIndex(attacker);
 							char spcl[768];
-							KvRewind(BossKV[Special[boss2]]);
-							KvGetString(BossKV[Special[boss2]], "name", spcl, sizeof(spcl), "=Failed name=");
+							GetBossSpecial(Special[GetBossIndex(attacker)], spcl, sizeof(spcl), client);
 							switch(Annotations)
 							{
 								case 1:
@@ -11745,7 +11778,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 									if(TellName)
 									{
 										char spcl[768];
-										KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
+										GetBossSpecial(Special[boss], spcl, sizeof(spcl), attacker);
 										switch(Annotations)
 										{
 											case 1:
@@ -11837,7 +11870,8 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 					{
 						SpawnSmallHealthPackAt(client, GetClientTeam(attacker), attacker);
 					}
-					case 327:  //Claidheamh M򲍊					{
+					case 327:  //Claidheamh Mor
+					{
 						if(kvWeaponMods==null || GetConVarInt(cvarHardcodeWep)>0)
 						{
 							float charge=GetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter");
@@ -11928,7 +11962,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 								if(TellName)
 								{
 									char spcl[768];
-									KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
+									GetBossSpecial(Special[boss], spcl, sizeof(spcl), attacker);
 									switch(Annotations)
 									{
 										case 1:
@@ -12112,7 +12146,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 						if(TellName)
 						{
 							char spcl[768];
-							KvGetString(BossKV[Special[boss]], "name", spcl, sizeof(spcl), "=Failed name=");
+							GetBossSpecial(Special[boss], spcl, sizeof(spcl), attacker);
 							switch(Annotations)
 							{
 								case 1:
@@ -12696,7 +12730,7 @@ stock bool GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int clien
 	KvGetString(BossKV[boss], language, name, bufferlength);
 	if(!name[0])
 	{
-		if(!IsValidClient)
+		if(!IsValidClient(client))
 		{
 			GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
 			Format(language, sizeof(language), "name_%s", language);
