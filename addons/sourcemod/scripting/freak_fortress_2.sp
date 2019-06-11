@@ -12750,23 +12750,23 @@ void GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int client=0)
 	Format(language, sizeof(language), "name_%s", language);
 
 	KvRewind(BossKV[boss]);
-	KvGetString(BossKV[boss], language, name, bufferlength);
+	KvGetString(BossKV[boss], language, name, bufferLength);
 	if(!name[0])
 	{
 		if(IsValidClient(client))	// Don't check server's lanuage twice
 		{
 			GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
 			Format(language, sizeof(language), "name_%s", language);
-			KvGetString(BossKV[boss], language, name, bufferlength);
+			KvGetString(BossKV[boss], language, name, bufferLength);
 		}
 		if(!name[0])
 		{
-			KvGetString(BossKV[boss], "name", name, bufferlength);
+			KvGetString(BossKV[boss], "name", name, bufferLength);
 			if(!name[0])
 				return;
 		}
 	}
-	strcopy(buffer, bufferlength, name);
+	strcopy(buffer, bufferLength, name);
 }
 
 stock int GetClientCloakIndex(int client)
@@ -15332,19 +15332,36 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 	int index=GetNativeCell(1), dstrlen=GetNativeCell(3), see=GetNativeCell(4), client=GetNativeCell(5);
 	char[] s = new char[dstrlen];
 
+	char language[20];
+	GetLanguageInfo(client ? GetClientLanguage(client) : GetServerLanguage(), language, 8, s, 8);
+	Format(language, sizeof(language), "name_%s", language);
+
 	if(see)
 	{
-		if(index<0)
+		if(index < 0)
 			return false;
 
 		if(!BossKV[index])
 			return false;
 
 		KvRewind(BossKV[index]);
+		KvGetString(BossKV[index], language, s, dstrlen);
+		if(!name[0])
+		{
+			if(client)
+			{
+				GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
+				Format(language, sizeof(language), "name_%s", language);
+				KvGetString(BossKV[index], language, s, dstrlen);
+			}
+
+			if(!name[0])
+				KvGetString(BossKV[index], "name", s, dstrlen);
+		}
 	}
 	else
 	{
-		if(index<0)
+		if(index < 0)
 			return false;
 
 		if(Special[index]<0)
@@ -15354,29 +15371,24 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 			return false;
 
 		KvRewind(BossKV[Special[index]]);
-	}
-
-	char language[20];
-	GetLanguageInfo(client ? GetClientLanguage(client) : GetServerLanguage(), language, 8, s, 8);
-	Format(language, sizeof(language), "name_%s", language);
-
-	KvRewind(BossKV[boss]);
-	KvGetString(BossKV[boss], language, s, dstrlen);
-	if(!name[0])
-	{
-		if(client)
-		{
-			GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
-			Format(language, sizeof(language), "name_%s", language);
-			KvGetString(BossKV[boss], language, s, dstrlen);
-		}
+		KvGetString(BossKV[Special[index]], language, s, dstrlen);
 		if(!name[0])
 		{
-			KvGetString(BossKV[special], "name", s, dstrlen);
+			if(client)
+			{
+				GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
+				Format(language, sizeof(language), "name_%s", language);
+				KvGetString(BossKV[Special[index]], language, s, dstrlen);
+			}
+
 			if(!name[0])
-				return false;
+				KvGetString(BossKV[Special[index]], "name", s, dstrlen);
 		}
 	}
+
+	if(!name[0])
+		return false;
+
 	SetNativeString(2, s, dstrlen);
 	return true;
 }
