@@ -3358,7 +3358,7 @@ public void LoadCharacter(const char[] character)
 
 	char key[PLATFORM_MAX_PATH], section[64];
 	KvSetString(BossKV[Specials], "filename", character);
-	KvSetString(BossKV[Specials], "name", config, sizeo(config));
+	KvSetString(BossKV[Specials], "name", config, sizeof(config));
 	bBlockVoice[Specials]=view_as<bool>(KvGetNum(BossKV[Specials], "sound_block_vo", 0));
 	BossSpeed[Specials]=KvGetFloat(BossKV[Specials], "maxspeed", 340.0);
 	KvGotoFirstSubKey(BossKV[Specials]);
@@ -4619,8 +4619,8 @@ public Action OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
 		{
 			if(IsBoss(target))
 			{
-				boss=Boss[target];
-				strcopy(name, sizeof(name), "=Failed name=");
+				boss = Boss[target];
+				strcopy(bossName, sizeof(bossName), "=Failed name=");
 				BossLives[boss]>1 ? Format(lives, sizeof(lives), "x%i", BossLives[boss]) : strcopy(lives, 2, "");
 				for(int client; client<=MaxClients; client++)
 				{
@@ -8055,10 +8055,10 @@ public Action OnObjectDestroyed(Handle event, const char[] name, bool dontBroadc
 
 public Action OnUberDeployed(Handle event, const char[] name, bool dontBroadcast)
 {
-	int client=GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(Enabled && IsValidClient(client) && IsPlayerAlive(client))
 	{
-		int medigun=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
+		int medigun = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
 		if(IsValidEntity(medigun))
 		{
 			char classname[64];
@@ -8066,15 +8066,15 @@ public Action OnUberDeployed(Handle event, const char[] name, bool dontBroadcast
 			if(StrEqual(classname, "tf_weapon_medigun"))
 			{
 				TF2_AddCondition(client, TFCond_HalloweenCritCandy, 0.5, client);
-				int target=GetHealingTarget(client);
+				int target = GetHealingTarget(client);
 				if(IsValidClient(target, false) && IsPlayerAlive(target))
 				{
 					TF2_AddCondition(target, TFCond_HalloweenCritCandy, 0.5, client);
-					uberTarget[client]=target;
+					uberTarget[client] = target;
 				}
 				else
 				{
-					uberTarget[client]=-1;
+					uberTarget[client] = -1;
 				}
 				CreateTimer(0.4, Timer_Uber, EntIndexToEntRef(medigun), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			}
