@@ -15346,7 +15346,7 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 
 		KvRewind(BossKV[index]);
 		KvGetString(BossKV[index], language, s, dstrlen);
-		if(!name[0])
+		if(!s[0])
 		{
 			if(client)
 			{
@@ -15355,7 +15355,7 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 				KvGetString(BossKV[index], language, s, dstrlen);
 			}
 
-			if(!name[0])
+			if(!s[0])
 				KvGetString(BossKV[index], "name", s, dstrlen);
 		}
 	}
@@ -15372,7 +15372,7 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 
 		KvRewind(BossKV[Special[index]]);
 		KvGetString(BossKV[Special[index]], language, s, dstrlen);
-		if(!name[0])
+		if(!s[0])
 		{
 			if(client)
 			{
@@ -15381,12 +15381,12 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 				KvGetString(BossKV[Special[index]], language, s, dstrlen);
 			}
 
-			if(!name[0])
+			if(!s[0])
 				KvGetString(BossKV[Special[index]], "name", s, dstrlen);
 		}
 	}
 
-	if(!name[0])
+	if(!s[0])
 		return false;
 
 	SetNativeString(2, s, dstrlen);
