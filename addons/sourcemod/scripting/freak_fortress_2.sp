@@ -12737,13 +12737,13 @@ public Action OnGetMaxHealth(int client, int &maxHealth)
 	return Plugin_Continue;
 }
 
-stock bool GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int client=0);
+void GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int client=0);
 {
 	if(boss < 0)
-		return false;
+		return;
 
 	if(!BossKV[boss])
-		return false;
+		return;
 
 	char name[64], language[20];
 	GetLanguageInfo(IsValidClient(client) ? GetClientLanguage(client) : GetServerLanguage(), language, 8, name, 8);
@@ -12761,13 +12761,12 @@ stock bool GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int clien
 		}
 		if(!name[0])
 		{
-			KvGetString(BossKV[special], "name", name, bufferlength);
+			KvGetString(BossKV[boss], "name", name, bufferlength);
 			if(!name[0])
-				return false;
+				return;
 		}
 	}
 	strcopy(buffer, bufferlength, name);
-	return true;
 }
 
 stock int GetClientCloakIndex(int client)
