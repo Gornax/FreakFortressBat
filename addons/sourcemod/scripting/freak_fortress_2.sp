@@ -82,7 +82,7 @@ last time or to encourage others to do the same.
 #define FORK_SUB_REVISION "Unofficial"
 #define FORK_DEV_REVISION "Build"
 
-#define BUILD_NUMBER FORK_MINOR_REVISION...""...FORK_STABLE_REVISION..."004"
+#define BUILD_NUMBER FORK_MINOR_REVISION...""...FORK_STABLE_REVISION..."010"
 
 #if !defined FORK_DEV_REVISION
 	#define PLUGIN_VERSION FORK_SUB_REVISION..." "...FORK_MAJOR_REVISION..."."...FORK_MINOR_REVISION..."."...FORK_STABLE_REVISION
@@ -5932,9 +5932,10 @@ public Action ConfirmBoss(int client)
 					Format(text, sizeof(text), "%t", "to0_nodesc");
 			}
 			ReplaceString(text, sizeof(text), "\\n", "\n");
+			GetBossSpecial(config, boss, sizeof(boss), client);
+			break;
 		}
 	}
-	GetBossSpecial(config, boss, sizeof(boss), client);
 
 	Handle dMenu = CreateMenu(ConfirmBossH);
 	SetMenuTitle(dMenu, text);
@@ -15350,7 +15351,7 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 		{
 			if(client)
 			{
-				GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
+				GetLanguageInfo(GetServerLanguage(), language, 8, s, 8);
 				Format(language, sizeof(language), "name_%s", language);
 				KvGetString(BossKV[index], language, s, dstrlen);
 			}
@@ -15376,7 +15377,7 @@ public int Native_GetSpecial(Handle plugin, int numParams)
 		{
 			if(client)
 			{
-				GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
+				GetLanguageInfo(GetServerLanguage(), language, 8, s, 8);
 				Format(language, sizeof(language), "name_%s", language);
 				KvGetString(BossKV[Special[index]], language, s, dstrlen);
 			}
