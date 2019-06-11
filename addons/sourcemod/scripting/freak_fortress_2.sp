@@ -4772,6 +4772,38 @@ public Action BossMenuTimer(Handle timer, any clientpack)
 	}
 }
 
+void GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int client=0);
+{
+	if(boss < 0)
+		return;
+
+	if(!BossKV[boss])
+		return;
+
+	char name[64], language[20];
+	GetLanguageInfo(IsValidClient(client) ? GetClientLanguage(client) : GetServerLanguage(), language, 8, name, 8);
+	Format(language, sizeof(language), "name_%s", language);
+
+	KvRewind(BossKV[boss]);
+	KvGetString(BossKV[boss], language, name, bufferlength);
+	if(!name[0])
+	{
+		if(IsValidClient(client))	// Don't check server's lanuage twice
+		{
+			GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
+			Format(language, sizeof(language), "name_%s", language);
+			KvGetString(BossKV[boss], language, name, bufferlength);
+		}
+		if(!name[0])
+		{
+			KvGetString(BossKV[boss], "name", name, bufferlength);
+			if(!name[0])
+				return;
+		}
+	}
+	strcopy(buffer, bufferlength, name);
+}
+
 public Action CompanionMenu(int client, int args)
 {
 	if(IsValidClient(client) && GetConVarBool(cvarDuoBoss))
@@ -12735,38 +12767,6 @@ public Action OnGetMaxHealth(int client, int &maxHealth)
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
-}
-
-void GetBossSpecial(int boss=0, char[] buffer, int bufferLength, int client=0);
-{
-	if(boss < 0)
-		return;
-
-	if(!BossKV[boss])
-		return;
-
-	char name[64], language[20];
-	GetLanguageInfo(IsValidClient(client) ? GetClientLanguage(client) : GetServerLanguage(), language, 8, name, 8);
-	Format(language, sizeof(language), "name_%s", language);
-
-	KvRewind(BossKV[boss]);
-	KvGetString(BossKV[boss], language, name, bufferlength);
-	if(!name[0])
-	{
-		if(IsValidClient(client))	// Don't check server's lanuage twice
-		{
-			GetLanguageInfo(GetServerLanguage(), language, 8, name, 8);
-			Format(language, sizeof(language), "name_%s", language);
-			KvGetString(BossKV[boss], language, name, bufferlength);
-		}
-		if(!name[0])
-		{
-			KvGetString(BossKV[boss], "name", name, bufferlength);
-			if(!name[0])
-				return;
-		}
-	}
-	strcopy(buffer, bufferlength, name);
 }
 
 stock int GetClientCloakIndex(int client)
