@@ -8165,13 +8165,13 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 					lives[0] = '\0';
 				}
 
-				for(int client; client<=MaxClients; client++)
+				for(int clients; clients<=MaxClients; clients++)
 				{
-					if(IsValidClient(client))
+					if(IsValidClient(clients))
 					{
-						GetBossSpecial(Special[boss], name, sizeof(name), client);
-						Format(text[client], sizeof(text[]), "%s\n%t", text[client], "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
-						FPrintToChat(client, "%t", "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+						GetBossSpecial(Special[boss], name, sizeof(name), clients);
+						Format(text[clients], sizeof(text[]), "%s\n%t", text[clients], "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+						FPrintToChat(clients, "%t", "ff2_hp", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
 					}
 				}
 				BossHealthLast[boss] = BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1);
